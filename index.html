@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZIGI UNI X — Premium Media Matrix</title>
+    <title>AZIGI UNI X — Premium Media Matrix</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
             </button>
             <!-- Secret trigger: Click logo 5 times quickly to open Creator Studio -->
-            <div class="logo" id="secretLogoTrigger" title="Zigi Uni X">ZIGI UNI <span>X</span></div>
+            <div class="logo" id="secretLogoTrigger" title="Azigi Uni X">AZIGI UNI <span>X</span></div>
         </div>
         <div class="search-wrap">
             <div class="search-bar">
@@ -42,7 +42,7 @@
                     <div class="dropdown-header">
                         <span id="userEmail"></span>
                     </div>
-                    <a href="#" id="profileLink">Profile Settings</a>
+                    <a href="#" id="profileLink">Signed-in Account</a>
                     <a href="#" id="favoritesLink">My Favorites</a>
                     <a href="#" id="historyLink">Watch History</a>
                     <hr>
@@ -139,55 +139,14 @@
         </main>
     </div>
 
-    <!-- Complete Website Footer -->
+    <!-- Footer -->
     <footer class="site-footer">
-        <div class="footer-container">
-            <!-- Column 1: Brand Pitch -->
-            <div class="footer-col brand-col">
-                <div class="logo">ZIGI UNI <span>X</span></div>
-                <p class="footer-desc">The ultimate next-generation adult streaming matrix bridging exclusive creator entertainment and live underground channels.</p>
-            </div>
-
-            <!-- Column 2: Platform Links -->
-            <div class="footer-col">
-                <h3>Platform</h3>
-                <ul>
-                    <li><a href="#" class="footer-link" data-filter="universities">🏛️ Universities</a></li>
-                    <li><a href="#" class="footer-link" data-filter="tiktokers">🎵 TikTokers</a></li>
-                    <li><a href="#" class="footer-link" data-filter="live-18">🔴 Live 18+</a></li>
-                    <li><a href="#" class="footer-link" data-filter="trending">🔥 Trending Feed</a></li>
-                    <li><a href="#" class="footer-link" data-filter="newest">✨ Latest Drops</a></li>
-                </ul>
-            </div>
-
-            <!-- Column 3: Legal & Support -->
-            <div class="footer-col">
-                <h3>Support & Legal</h3>
-                <ul>
-                    <li><a href="#" class="footer-link">Terms of Service</a></li>
-                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
-                    <li><a href="#" class="footer-link">18 U.S.C. § 2257 Compliance</a></li>
-                    <li><a href="#" class="footer-link">Contact Support</a></li>
-                </ul>
-            </div>
-
-            <!-- Column 4: Newsletter Submission -->
-            <div class="footer-col newsletter-col">
-                <h3>Stay Connected</h3>
-                <p>Subscribe for VIP access alerts, daily new model drops, and secret channel invites.</p>
-                <form class="footer-form" onsubmit="event.preventDefault(); alert('Successfully subscribed!');">
-                    <input type="email" placeholder="Enter your email" required>
-                    <button type="submit">Join VIP</button>
-                </form>
-            </div>
-        </div>
-
         <!-- Fine-Print Legal Disclaimer -->
-        <p class="footer-disclaimer">DISCLAIMER: ZIGI UNI X has zero tolerance policy for illegal content. All models, actors, and performers featured were 18 years of age or older at the time of recording. We act strictly as an intermediary web hosting platform service.</p>
+        <p class="footer-disclaimer">DISCLAIMER: AZIGI UNI X has zero tolerance policy for illegal content. All models, actors, and performers featured were 18 years of age or older at the time of recording. We act strictly as an intermediary web hosting platform service.</p>
 
         <!-- Footer Bottom Bar -->
         <div class="footer-bottom">
-            <p>&copy; 2026 ZIGI UNI X. All rights reserved. Adults Only (18+).</p>
+            <p>&copy; 2026 AZIGI UNI X. All rights reserved. Adults Only (18+).</p>
             <div class="footer-socials">
                 <a href="https://t.me" target="_blank" class="social-icon telegram" title="Join our Telegram">
                     <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
@@ -210,18 +169,11 @@
                 <!-- Real Video Player -->
                 <div class="player-shell">
                     <video id="watchPlayer" controls playsinline preload="metadata"></video>
-                    <div class="player-fallback" id="playerFallback" hidden>⚠️ Stream source unavailable (demo offline).</div>
+                    <div class="player-fallback" id="playerFallback" hidden>⚠️ Could not play this video. Check that its URL points directly to an accessible MP4 file.</div>
                     <span class="badge-live watch-live" id="watchLive" hidden>LIVE</span>
                 </div>
                 <div class="player-controls">
-                    <label class="quality-select">Quality
-                        <select id="qualitySelect" class="modern-select">
-                            <option value="1080p">1080p HD</option>
-                            <option value="720p" selected>720p</option>
-                            <option value="480p">480p</option>
-                            <option value="360p">360p</option>
-                        </select>
-                    </label>
+                    <span class="quality-select">Playback quality depends on the video source.</span>
                 </div>
 
                 <h3 id="modalVideoTitle" class="watch-title">Video Title</h3>
@@ -419,6 +371,7 @@
 
     <!-- Supabase JS Client & Scripts (Ordered Correctly) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="data.js"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
     

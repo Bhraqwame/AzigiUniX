@@ -1,4 +1,4 @@
-# Supabase Setup Guide for ZIGI UNI X
+# Supabase Setup Guide for AZIGI UNI X
 
 This guide will help you connect your video streaming platform to Supabase for database and storage.
 
@@ -52,7 +52,6 @@ CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at DESC);
 -- Row Level Security (RLS) optional but recommended
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read" ON videos FOR SELECT USING (true);
-CREATE POLICY "Allow insert for authenticated users" ON videos FOR INSERT TO authenticated WITH CHECK (true);
 
 -- Favorites table (linked to authenticated users)
 CREATE TABLE IF NOT EXISTS favorites (
@@ -128,8 +127,26 @@ CREATE POLICY "Users can update/delete own comments" ON comments FOR UPDATE USIN
 CREATE POLICY "Users can delete own comments" ON comments FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "Users manage own history" ON watch_history FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Admins can read all profiles" ON profiles FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id AND role = 'client');
+-- Use a SECURITY DEFINER helper so the policy does not recursively query profiles under RLS.
+CREATE OR REPLACE FUNCTION public.is_admin_profile()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+CREATE POLICY "Allow insert for authenticated users" ON videos
+  FOR INSERT TO authenticated WITH CHECK (public.is_admin_profile());
+CREATE POLICY "Admins can read all profiles" ON profiles
+  FOR SELECT TO authenticated USING (public.is_admin_profile());
 
 -- Function to create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -172,7 +189,7 @@ You can add sample videos via the Table Editor or run this SQL:
 ```sql
 INSERT INTO videos (id, title, channel, category, tags, duration_sec, views_text, age_text, days_ago, likes, dislikes, video_url, thumb_url)
 VALUES 
-  ('v1', 'Global University Campus Tour & Student Life Overview', 'EduNetwork', 'universities', ARRAY['newest', 'campus'], 765, '50K views', '2 days ago', 2, 1204, 31, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 'https://picsum.photos/seed/azigi1/320/180');
+  ('v1', 'Global University Campus Tour & Student Life Overview', 'EduNetwork', 'universities', ARRAY['newest', 'campus'], 765, '50K views', '2 days ago', 2, 1204, 31, 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', 'https://picsum.photos/seed/azigi1/320/180')
 ```
 
 ## Notes
@@ -181,24 +198,60 @@ VALUES
 - RLS is enabled with public read access - adjust based on your needs
 - The upload dashboard is now available in the footer and header (for logged-in users)
 - To upload, provide a video URL that you've already stored (e.g., in Supabase Storage, R2, or GCP)
-- Your existing auth system (localStorage-based) remains unchanged
+- Sign-in and registration use Supabase Auth; the current user is cached in local storage for the interface.
 
-## Admin User Setup
+## Creator Studio Admin Access
 
-To create the admin account (Gabby / Gabby123):
+Creating the `profiles` table does not create a sign-in account. First create the owner account in Supabase **Authentication → Users → Add user**, or use the site's **Register** form and confirm the email if confirmation is enabled. Set a strong, unique password directly in Supabase or in the site's form; do not put passwords in project files or share them in chat. The signup trigger creates a `client` profile automatically.
 
-1. Go to your Supabase project > Authentication > Users
-2. Click "Add User" > "Create new user"
-3. Set Email to: `gabby@azigiuni.com`
-4. Set Password to: `Gabby123`
-5. Click "Create user"
+If Creator Studio reports `Could not find the table 'public.profiles' in the schema cache`, the project is missing its profiles table. Run the current `setup-sql.sql` in the Supabase SQL Editor (it is safe to rerun), then wait briefly for the API schema cache to refresh and retry. This creates the profile table and signup trigger; it does not set or store an account password.
 
-The app will automatically recognize this email as an admin. Passwords are securely stored in Supabase Auth (not in code).
-
-You can also set the role to 'admin' in the profiles table if needed:
+After creating and confirming the owner account, run the following in the Supabase SQL Editor. Replace `owner@example.com` with the exact email used for that account. The block stops with an error if no matching Auth user exists, and otherwise creates or promotes that user's profile:
 
 ```sql
-UPDATE profiles SET role = 'admin' WHERE id = (SELECT id FROM auth.users WHERE email = 'gabby@azigiuni.com');
+DO $$
+DECLARE
+  owner_id UUID;
+  owner_name TEXT;
+BEGIN
+  SELECT id, raw_user_meta_data->>'full_name'
+  INTO owner_id, owner_name
+  FROM auth.users
+  WHERE lower(email) = lower('owner@example.com')
+  LIMIT 1;
+
+  IF owner_id IS NULL THEN
+    RAISE EXCEPTION 'No Supabase Auth user found for owner@example.com';
+  END IF;
+
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (owner_id, owner_name, 'admin')
+  ON CONFLICT (id) DO UPDATE SET role = 'admin';
+END;
+$$;
+```
+
+Run this only for a trusted owner account. If the account already has an active session, sign out and back in after changing its role.
+
+For an existing project that used the older setup guide, also replace its recursive admin profile policy:
+
+```sql
+CREATE OR REPLACE FUNCTION public.is_admin_profile()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+DROP POLICY IF EXISTS "Admins can read all profiles" ON public.profiles;
+CREATE POLICY "Admins can read all profiles" ON public.profiles
+  FOR SELECT TO authenticated USING (public.is_admin_profile());
 ```
 
 ## Video Upload Flow

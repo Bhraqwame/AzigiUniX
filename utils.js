@@ -1,4 +1,4 @@
-// Utilities module for ZIGI UNI X
+// Utilities module for AZIGI UNI X
 
 function readJSON(key, fallback) {
     try {

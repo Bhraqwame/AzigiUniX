@@ -1,4 +1,4 @@
-// Data module for ZIGI UNI X
+// Data module for AZIGI UNI X
 
 const SAMPLE = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
 const seedThumb = (s) => `https://picsum.photos/seed/${s}/320/180`;
@@ -26,4 +26,6 @@ function byId(id) {
     return VIDEOS.find((v) => v.id === id);
 }
 
-export { VIDEOS, byId, SAMPLE };
+window.SAMPLE = SAMPLE;
+window.VIDEOS = VIDEOS;
+window.byId = byId;
