@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIGI UNI X — Premium Media Matrix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="nav-left">
+            <button id="menuToggleBtn" class="btn-hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidebarNav">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <!-- Secret trigger: Click logo 5 times quickly to open Creator Studio -->
+            <div class="logo" id="secretLogoTrigger" title="Zigi Uni X">ZIGI UNI <span>X</span></div>
+        </div>
+        <div class="search-wrap">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search exclusive videos, creators, models..." autocomplete="off">
+                <button type="button" id="searchBtn" aria-label="Search">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+            </div>
+            <!-- Autocomplete Suggestions Dropdown -->
+            <div class="search-suggest" id="searchSuggest" hidden></div>
+        </div>
+        <div class="user-menu">
+            <!-- Theme Toggle Switcher Button -->
+            <button id="themeToggleBtn" class="btn-theme" title="Toggle Light/Dark Mode">
+                <span class="theme-icon">🌙</span> <span class="theme-text">Mode</span>
+            </button>
+            <button id="loginBtn" class="btn-login" title="Login or Sign Up">Sign In</button>
+            <div class="user-dropdown" id="userDropdown" style="display: none;" hidden>
+                <div class="profile-pic" id="profilePic" title="User Menu"></div>
+                <div class="dropdown-menu" id="dropdownMenu" hidden>
+                    <div class="dropdown-header">
+                        <span id="userEmail"></span>
+                    </div>
+                    <a href="#" id="profileLink">Profile Settings</a>
+                    <a href="#" id="favoritesLink">My Favorites</a>
+                    <a href="#" id="historyLink">Watch History</a>
+                    <hr>
+                    <a href="#" id="logoutLink" class="logout-link">Log Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebarNav">
+            <nav class="sidebar-menu">
+                <a href="#" class="nav-item active" data-filter="all">
+                    <span class="nav-icon">🏠</span> <span>Discover Feed</span>
+                </a>
+                <a href="#" class="nav-item" data-filter="trending">
+                    <span class="nav-icon">🔥</span> <span>Trending 18+</span>
+                </a>
+                <a href="#" class="nav-item" data-filter="newest">
+                    <span class="nav-icon">✨</span> <span>Latest Drops</span>
+                </a>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-heading">Exclusive Categories</h3>
+                <a href="#" class="nav-item" data-filter="universities">
+                    <span class="nav-icon">🏛️</span> <span>Universities</span>
+                </a>
+                <a href="#" class="nav-item" data-filter="tiktokers">
+                    <span class="nav-icon">🎵</span> <span>TikTokers</span>
+                </a>
+                <a href="#" class="nav-item" data-filter="live-18">
+                    <span class="nav-icon live-dot">🔴</span> <span>Live Cam 18+</span>
+                </a>
+            </nav>
+            <div class="sidebar-divider"></div>
+            <h3 class="sidebar-heading">Explore Tags A–Z</h3>
+            <!-- Tag Index Rendered Dynamically -->
+            <div class="tag-cloud" id="tagCloud"></div>
+        </aside>
+
+        <!-- Dimmed Overlay Behind the Mobile Navigation Drawer -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- Main Video Grid Content -->
+        <main class="content">
+            <!-- Dynamic Content Header / Top Chips Row -->
+            <div class="filter-chips" id="filterChips">
+                <button class="chip active" data-filter="all">All Content</button>
+                <button class="chip" data-filter="universities">Universities</button>
+                <button class="chip" data-filter="tiktokers">TikTokers</button>
+                <button class="chip" data-filter="live-18">🔴 Live 18+</button>
+            </div>
+
+            <!-- Sort & Duration Toolbar -->
+            <div class="sort-bar" id="sortBar">
+                <div class="sort-options">
+                    <span class="toolbar-label">Sort by:</span>
+                    <button class="sort-btn active" data-sort="relevance" type="button">Relevance</button>
+                    <button class="sort-btn" data-sort="date" type="button">Newest</button>
+                    <button class="sort-btn" data-sort="duration" type="button">Duration</button>
+                </div>
+                <div class="duration-select-wrap">
+                    <select id="durationFilter" title="Filter by video length" class="modern-select">
+                        <option value="any">Any length</option>
+                        <option value="short">Short (&lt; 5 min)</option>
+                        <option value="medium">Medium (5–20 min)</option>
+                        <option value="long">Long (&gt; 20 min)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-header-row">
+                <h2 id="sectionTitle">Recommended Content</h2>
+            </div>
+
+            <!-- Recently Watched Shelf -->
+            <div class="history-row" id="historyRow" hidden>
+                <div class="history-head">
+                    <h3>🕒 Continue Watching</h3>
+                    <button type="button" id="clearHistoryBtn" class="btn-ghost">Clear history</button>
+                </div>
+                <div class="history-track" id="historyTrack"></div>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                <!-- Video cards are rendered dynamically -->
+            </div>
+
+            <!-- Empty State for Search / Filters -->
+            <div class="empty-state" id="emptyState" hidden>
+                <span class="empty-icon">🔍</span>
+                <p id="emptyStateMsg">No videos match your search criteria.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Complete Website Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <!-- Column 1: Brand Pitch -->
+            <div class="footer-col brand-col">
+                <div class="logo">ZIGI UNI <span>X</span></div>
+                <p class="footer-desc">The ultimate next-generation adult streaming matrix bridging exclusive creator entertainment and live underground channels.</p>
+            </div>
+
+            <!-- Column 2: Platform Links -->
+            <div class="footer-col">
+                <h3>Platform</h3>
+                <ul>
+                    <li><a href="#" class="footer-link" data-filter="universities">🏛️ Universities</a></li>
+                    <li><a href="#" class="footer-link" data-filter="tiktokers">🎵 TikTokers</a></li>
+                    <li><a href="#" class="footer-link" data-filter="live-18">🔴 Live 18+</a></li>
+                    <li><a href="#" class="footer-link" data-filter="trending">🔥 Trending Feed</a></li>
+                    <li><a href="#" class="footer-link" data-filter="newest">✨ Latest Drops</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Legal & Support -->
+            <div class="footer-col">
+                <h3>Support & Legal</h3>
+                <ul>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">18 U.S.C. § 2257 Compliance</a></li>
+                    <li><a href="#" class="footer-link">Contact Support</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 4: Newsletter Submission -->
+            <div class="footer-col newsletter-col">
+                <h3>Stay Connected</h3>
+                <p>Subscribe for VIP access alerts, daily new model drops, and secret channel invites.</p>
+                <form class="footer-form" onsubmit="event.preventDefault(); alert('Successfully subscribed!');">
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit">Join VIP</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fine-Print Legal Disclaimer -->
+        <p class="footer-disclaimer">DISCLAIMER: ZIGI UNI X has zero tolerance policy for illegal content. All models, actors, and performers featured were 18 years of age or older at the time of recording. We act strictly as an intermediary web hosting platform service.</p>
+
+        <!-- Footer Bottom Bar -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 ZIGI UNI X. All rights reserved. Adults Only (18+).</p>
+            <div class="footer-socials">
+                <a href="https://t.me" target="_blank" class="social-icon telegram" title="Join our Telegram">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+                    Telegram
+                </a>
+                <a href="https://wa.me" target="_blank" class="social-icon whatsapp" title="Chat on WhatsApp">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Video Player Modal Component -->
+    <div class="video-modal" id="videoModal">
+        <div class="modal-content watch-layout">
+            <button type="button" class="close-modal" id="closeModal" aria-label="Close modal">&times;</button>
+
+            <div class="watch-main">
+                <!-- Real Video Player -->
+                <div class="player-shell">
+                    <video id="watchPlayer" controls playsinline preload="metadata"></video>
+                    <div class="player-fallback" id="playerFallback" hidden>⚠️ Stream source unavailable (demo offline).</div>
+                    <span class="badge-live watch-live" id="watchLive" hidden>LIVE</span>
+                </div>
+                <div class="player-controls">
+                    <label class="quality-select">Quality
+                        <select id="qualitySelect" class="modern-select">
+                            <option value="1080p">1080p HD</option>
+                            <option value="720p" selected>720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                        </select>
+                    </label>
+                </div>
+
+                <h3 id="modalVideoTitle" class="watch-title">Video Title</h3>
+                <p id="modalVideoMeta" class="watch-meta">Meta Info</p>
+
+                <!-- Ratings -->
+                <div class="watch-actions">
+                    <button type="button" id="likeBtn" class="action-btn">👍 <span id="likeCount">0</span></button>
+                    <button type="button" id="dislikeBtn" class="action-btn">👎 <span id="dislikeCount">0</span></button>
+                    <button type="button" id="favoriteBtn" class="action-btn">❤️ Favorite</button>
+                    <span class="watch-views" id="watchViews"></span>
+                </div>
+
+                <!-- Comments -->
+                <div class="comments-section">
+                    <h4>Discussion <span id="commentCount">(0)</span></h4>
+                    <form class="comment-form" id="commentForm">
+                        <input type="text" id="commentInput" placeholder="Leave a respectful comment..." maxlength="300" required>
+                        <button type="submit">Post</button>
+                    </form>
+                    <ul class="comment-list" id="commentList"></ul>
+                </div>
+            </div>
+
+            <!-- Related Videos Rail -->
+            <aside class="watch-related">
+                <h4>Up Next / Related</h4>
+                <div id="relatedList"></div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Age Verification Gate Overlay Component -->
+    <div class="age-gate-modal" id="ageGateModal">
+        <div class="age-gate-content">
+            <div class="age-gate-icon">🔞</div>
+            <h2>Age Verification Required</h2>
+            <p>You are entering a secure adult entertainment platform containing sexually explicit media intended strictly for adults. By entering, you confirm you are at least <strong>18 years of age</strong> (or the legal age of majority in your jurisdiction).</p>
+            <p class="age-gate-question">Are you 18 or older?</p>
+            <div class="age-gate-buttons">
+                <button id="ageGateRejectBtn" class="btn-gate reject">Exit Site</button>
+                <button id="ageGateAcceptBtn" class="btn-gate accept">I am 18+ — Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login/Signup Modal Component -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <button type="button" class="close-modal" id="closeAuthModal" aria-label="Close modal">&times;</button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Sign In</button>
+                <button class="auth-tab" data-tab="signup">Register</button>
+            </div>
+            
+            <div class="auth-form" id="loginForm">
+                <h2>Welcome Back</h2>
+                <p class="auth-subtitle">Sign in to access your personalized feed, favorites, and watch history.</p>
+                <form id="loginFormEl" novalidate>
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+                        <span class="error-message" id="loginEmailError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required minlength="6" autocomplete="current-password">
+                        <span class="error-message" id="loginPasswordError"></span>
+                    </div>
+                    <button type="submit" class="btn-auth" id="loginSubmitBtn">Sign In</button>
+                </form>
+                <p class="auth-footer">Don't have an account? <a href="#" id="switchToSignupLink">Register now</a></p>
+            </div>
+
+            <div class="auth-form" id="signupForm" hidden>
+                <h2>Create Account</h2>
+                <p class="auth-subtitle">Join our community for full features and high-speed streaming.</p>
+                <form id="signupFormEl" novalidate>
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com" required>
+                        <span class="error-message" id="signupEmailError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required minlength="6">
+                        <span class="error-message" id="signupPasswordError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupConfirm">Confirm Password</label>
+                        <input type="password" id="signupConfirm" placeholder="Re-enter password" required>
+                        <span class="error-message" id="signupConfirmError"></span>
+                    </div>
+                    <button type="submit" class="btn-auth">Register</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clean, User-Friendly Admin / Creator Studio Modal -->
+    <div class="auth-modal" id="adminModal">
+        <div class="auth-modal-content admin-modal-box" style="max-width: 520px; border-top: 4px solid var(--accent-color);">
+            <button type="button" class="close-modal" id="closeAdminModal" aria-label="Close modal">&times;</button>
+            
+            <!-- Login View -->
+            <div id="adminLoginSection">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="font-size: 36px; margin-bottom: 8px;">🔐</div>
+                    <h2>Creator Studio Access</h2>
+                    <p class="auth-subtitle">Restricted to verified creators and administrators.</p>
+                </div>
+                <form id="adminLoginForm" novalidate>
+                    <div class="form-group">
+                        <label for="adminEmail">Creator Email</label>
+                        <input type="email" id="adminEmail" placeholder="creator@zigiunix.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Access Password</label>
+                        <input type="password" id="adminPassword" placeholder="••••••••••••" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-auth" style="margin-top: 8px;">Authenticate Studio</button>
+                </form>
+            </div>
+
+            <!-- Upload Dashboard View -->
+            <div id="adminDashboardSection" hidden>
+                <div class="upload-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span>🚀</span> Creator Studio Hub
+                        </h3>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Publish media directly to the matrix network</p>
+                    </div>
+                    <button type="button" id="adminLogoutBtn" class="btn-ghost" style="padding: 6px 12px; font-size: 12px;">Lock Studio</button>
+                </div>
+
+                <form class="upload-form" id="uploadForm" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="uploadTitle">Video Title *</label>
+                            <input type="text" id="uploadTitle" placeholder="e.g. Exclusive Campus Tour" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="uploadChannel">Channel / Creator *</label>
+                            <input type="text" id="uploadChannel" placeholder="e.g. Creator Name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="uploadCategory">Category *</label>
+                            <select id="uploadCategory" class="modern-select" required style="width: 100%; padding: 10px; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <option value="universities">🏛️ Universities</option>
+                                <option value="tiktokers">🎵 TikTokers</option>
+                                <option value="live-18">🔴 Live 18+</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="uploadDuration">Duration (Seconds)</label>
+                            <input type="number" id="uploadDuration" placeholder="e.g. 765" min="0" inputmode="numeric">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="uploadTags">Tags (Comma separated)</label>
+                        <input type="text" id="uploadTags" placeholder="e.g. trending, campus, exclusive">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="uploadThumbUrl">Thumbnail Image URL</label>
+                        <input type="url" id="uploadThumbUrl" placeholder="https://picsum.photos/seed/xyz/320/180">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="uploadVideoUrl">Direct Stream Video URL *</label>
+                        <input type="url" id="uploadVideoUrl" placeholder="https://domain.com/video.mp4" required>
+                        <span class="helper-text" style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Supports direct `.mp4` video stream links.</span>
+                    </div>
+
+                    <button type="submit" class="btn-auth" id="uploadSubmitBtn" style="margin-top: 6px;">Publish to Feed</button>
+                    
+                    <div class="upload-progress" id="uploadProgress" hidden style="margin-top: 10px;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <p class="upload-status" id="uploadStatus" style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; text-align: center;">Uploading media...</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Supabase JS Client & Scripts (Ordered Correctly) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js"></script>
+    
+    <script>
+        // Secret trigger: Click the website logo 5 times rapidly to open the Creator Studio
+        let logoClicks = 0;
+        let clickTimer = null;
+        const secretTrigger = document.getElementById('secretLogoTrigger');
+        if (secretTrigger) {
+            secretTrigger.style.cursor = 'pointer';
+            secretTrigger.addEventListener('click', () => {
+                logoClicks++;
+                clearTimeout(clickTimer);
+                clickTimer = setTimeout(() => { logoClicks = 0; }, 1500);
+                if (logoClicks >= 5) {
+                    logoClicks = 0;
+                    const adminModal = document.getElementById('adminModal');
+                    if (adminModal) {
+                        adminModal.classList.add('open');
+                        document.getElementById('adminLoginSection').hidden = false;
+                        document.getElementById('adminDashboardSection').hidden = true;
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
