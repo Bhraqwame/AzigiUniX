@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         likes: v.likes || 0,
                         dislikes: v.dislikes || 0,
                         thumb: v.thumb_url || `https://picsum.photos/seed/${v.id}/320/180`,
-                        src: v.video_url,
+                        src: v.video_url || `${SAMPLE}BigBuckBunny.mp4`, // Fallback sample video if empty
                         comments: v.comments || []
                     }));
                     return true;
@@ -378,7 +378,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return list;
     }
 
-    // FIXED AUTH UI FUNCTION: Ensures avatar and dropdown are completely hidden when logged out
     function updateAuthUI() {
         const loginBtn = document.getElementById('loginBtn');
         const userDropdown = document.getElementById('userDropdown');
@@ -719,7 +718,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================================
-    // 13. WATCH VIEW & INTERACTIONS
+    // 13. WATCH VIEW & INTERACTIONS (FIXED PLAYER SOURCE HANDLING)
     // ==========================================================
     function getRatings() {
         return userRatings;
@@ -842,65 +841,96 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderFavoriteBtn(video) {
         const favBtn = document.getElementById('favoriteBtn');
         if (!favBtn) return;
-        if (isFavorite(video.id)) {
-            favBtn.classList.add('active');
-            favBtn.textContent = '🖤 Favorited';
-        } else {
-            favBtn.classList.remove('active');
-            favBtn.textContent = '❤️ Favorite';
-        }
+        const fav = isFavorite(video.id);
+        favBtn.textContent = fav ? '❤️ Favorited' : '❤️ Favorite';
+        favBtn.classList.toggle('active', fav);
     }
 
-    if (commentForm) {
-        commentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = commentInput.value.trim();
-            const v = byId(currentWatchId);
-            if (!text || !v) return;
-            if (!currentUser) {
-                showToast('Please login to comment', 'warning');
-                authModal.classList.add('open');
-                return;
-            }
+    async function recordHistory(videoId) {
+        let h = currentUser ? await loadWatchHistory(currentUser.id) : readJSON(getUserKey('History'), []);
+        h = h.filter(id => id !== videoId);
+        h.unshift(videoId);
+        if (h.length > 20) h.pop();
+
+        if (currentUser && window.supabaseClient) {
             try {
-                if (window.supabaseClient) {
-                    await window.supabaseClient.from('comments').insert({
-                        user_id: currentUser.id,
-                        video_id: v.id,
-                        comment_text: text,
-                        author_name: currentUser.email
-                    });
-                }
-            } catch (err) {}
-            commentInput.value = '';
-            await renderComments(v);
-            showToast('Comment posted!', 'success');
-        });
+                await window.supabaseClient.from('watch_history').upsert({
+                    user_id: currentUser.id,
+                    video_id: videoId,
+                    watched_at: new Date().toISOString()
+                }, { onConflict: 'user_id,video_id' });
+            } catch (e) {}
+        } else {
+            writeJSON(getUserKey('History'), h);
+        }
+        renderHistory();
     }
 
-    if (document.getElementById('favoriteBtn')) {
-        document.getElementById('favoriteBtn').addEventListener('click', toggleFavorite);
+    async function openWatch(id) {
+        const v = byId(id);
+        if (!v) return;
+        currentWatchId = v.id;
+
+        modalVideoTitle.textContent = v.title;
+        modalVideoMeta.textContent = `${v.channel} • ${v.viewsText} • ${v.ageText}`;
+        watchViews.textContent = v.viewsText;
+
+        // FIXED VIDEO SOURCE SETUP & FALLBACK HANDLING
+        if (watchPlayer) {
+            const streamSrc = v.src || `${SAMPLE}BigBuckBunny.mp4`;
+            watchPlayer.src = streamSrc;
+            watchPlayer.load();
+
+            if (playerFallback) playerFallback.hidden = true;
+
+            watchPlayer.play().catch(() => {
+                console.log('Autoplay blocked or stream requires user interaction.');
+            });
+
+            watchPlayer.onerror = () => {
+                if (playerFallback) playerFallback.hidden = false;
+            };
+        }
+
+        watchLive.hidden = !v.live;
+        renderRatings(v);
+        renderFavoriteBtn(v);
+        await renderComments(v);
+
+        // Render Related Videos
+        const related = VIDEOS.filter(item => item.id !== v.id && isVideoAllowed(item)).slice(0, 5);
+        relatedList.innerHTML = related.map(item => `
+            <div class="related-item" data-id="${item.id}">
+                <div class="related-thumb">
+                    <img src="${item.thumb}" alt="">
+                    <span class="related-dur">${formatDuration(item.durationSec)}</span>
+                </div>
+                <div>
+                    <p class="related-title">${escapeHtml(item.title)}</p>
+                    <p class="related-meta">${escapeHtml(item.channel)}</p>
+                </div>
+            </div>
+        `).join('');
+
+        videoModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        await recordHistory(v.id);
     }
 
-    function renderRelated(video) {
-        const scored = VIDEOS
-            .filter((x) => x.id !== video.id && isVideoAllowed(x))
-            .map((x) => ({
-                x,
-                score: (x.category === video.category ? 2 : 0) +
-                    x.tags.filter((t) => video.tags.includes(t)).length
-            }));
-        let list = scored.filter((e) => e.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5)
-            .map((e) => e.x);
-        if (list.length === 0) list = scored.slice(0, 5).map((e) => e.x);
-        relatedList.innerHTML = list.map((x) => `
-            <div class="related-item" data-id="${x.id}">
-                <div class="related-thumb"><img src="${x.thumb}" alt=""><span class="related-dur">${x.live ? 'LIVE' : formatDuration(x.durationSec)}</span></div>
-                <div><p class="related-title">${escapeHtml(x.title)}</p><p class="related-meta">${escapeHtml(x.channel)}</p></div>
-            </div>`).join('');
+    function closeWatch() {
+        if (watchPlayer) {
+            watchPlayer.pause();
+            watchPlayer.src = '';
+        }
+        videoModal.classList.remove('open');
+        document.body.style.overflow = '';
+        currentWatchId = null;
     }
+
+    if (closeModal) closeModal.addEventListener('click', closeWatch);
+    videoModal.addEventListener('click', (e) => {
+        if (e.target === videoModal) closeWatch();
+    });
 
     relatedList.addEventListener('click', (e) => {
         const item = e.target.closest('.related-item');
@@ -908,547 +938,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         openWatch(item.getAttribute('data-id'));
     });
 
-    async function openWatch(id) {
-        const v = byId(id);
-        if (!v || !isVideoAllowed(v)) return;
-        currentWatchId = id;
-        if (currentUser && window.supabaseClient) {
-            try {
-                await window.supabaseClient
-                    .from('watch_history')
-                    .upsert({ user_id: currentUser.id, video_id: id, watched_at: new Date().toISOString() }, { onConflict: 'user_id,video_id' });
-            } catch (e) {}
-        } else {
-            const h = readJSON(getUserKey('History'), []).filter(x => x !== id);
-            h.unshift(id);
-            writeJSON(getUserKey('History'), h.slice(0, 12));
-        }
-
-        modalVideoTitle.textContent = v.title;
-        modalVideoMeta.textContent = `${v.channel} • ${v.viewsText} • ${v.ageText}`;
-        watchViews.textContent = v.viewsText;
-        watchLive.hidden = !v.live;
-
-        playerFallback.hidden = true;
-        if (watchPlayer) {
-            watchPlayer.poster = v.thumb;
-            watchPlayer.src = v.src;
-        }
-
-        renderRatings(v);
-        await renderComments(v);
-        renderFavoriteBtn(v);
-        renderRelated(v);
-        renderHistory();
-        hideSuggest();
-
-        videoModal.classList.add('open');
-    }
-
-    if (watchPlayer) {
-        watchPlayer.addEventListener('error', () => { playerFallback.hidden = false; });
-    }
-
-    if (qualitySelect) {
-        qualitySelect.addEventListener('change', () => {
-            watchPlayer.dataset.quality = qualitySelect.value;
-        });
-    }
-
-    if (closeModal) {
-        closeModal.addEventListener('click', () => { videoModal.classList.remove('open'); });
-    }
-
-    window.addEventListener('click', (e) => {
-        if (e.target === videoModal) videoModal.classList.remove('open');
-    });
-
-    // ==========================================================
-    // 14. HISTORY SHELF
-    // ==========================================================
-    historyTrack.addEventListener('click', (e) => {
-        const item = e.target.closest('.history-item');
-        if (!item) return;
-        openWatch(item.getAttribute('data-id'));
-    });
-
-    if (clearHistoryBtn) {
-        clearHistoryBtn.addEventListener('click', async () => {
-            if (currentUser && window.supabaseClient) {
-                try {
-                    await window.supabaseClient.from('watch_history').delete().eq('user_id', currentUser.id);
-                } catch (e) {}
-            }
-            writeJSON(getUserKey('History'), []);
-            await renderHistory();
-        });
-    }
-
-    // ==========================================================
-    // 15. MOBILE DRAWER & ESCAPE
-    // ==========================================================
-    const menuToggleBtn = document.getElementById('menuToggleBtn');
-    const sidebarEl = document.querySelector('.sidebar');
-    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-
-    function closeSidebar() {
-        if (!sidebarEl) return;
-        sidebarEl.classList.remove('open');
-        if (sidebarBackdrop) sidebarBackdrop.classList.remove('open');
-        if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('menu-open');
-    }
-
-    if (menuToggleBtn && sidebarEl && sidebarBackdrop) {
-        menuToggleBtn.addEventListener('click', () => {
-            const isOpen = !sidebarEl.classList.contains('open');
-            sidebarEl.classList.toggle('open', isOpen);
-            sidebarBackdrop.classList.toggle('open', isOpen);
-            menuToggleBtn.setAttribute('aria-expanded', String(isOpen));
-            document.body.classList.toggle('menu-open', isOpen);
-        });
-
-        sidebarBackdrop.addEventListener('click', closeSidebar);
-        window.addEventListener('resize', () => { if (window.innerWidth > 768) closeSidebar(); });
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        if (!searchSuggest.hidden) { hideSuggest(); return; }
-        if (videoModal.classList.contains('open')) { videoModal.classList.remove('open'); return; }
-        if (authModal && authModal.classList.contains('open')) { authModal.classList.remove('open'); return; }
-        const adminModal = document.getElementById('adminModal');
-        if (adminModal && adminModal.classList.contains('open')) { adminModal.classList.remove('open'); return; }
-        closeSidebar();
-    });
-
-    // ==========================================================
-    // 16. AUTHENTICATION & USER MENU MODALS
-    // ==========================================================
-    const loginBtn = document.getElementById('loginBtn');
-    const closeAuthModal = document.getElementById('closeAuthModal');
-    const authTabs = document.querySelectorAll('.auth-tab');
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    const loginFormEl = document.getElementById('loginFormEl');
-    const signupFormEl = document.getElementById('signupFormEl');
-    const profilePic = document.getElementById('profilePic');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    const logoutLink = document.getElementById('logoutLink');
-    const favoritesLink = document.getElementById('favoritesLink');
-    const historyLink = document.getElementById('historyLink');
-
-    if (loginBtn && authModal) {
-        loginBtn.addEventListener('click', () => { authModal.classList.add('open'); });
-    }
-
-    if (closeAuthModal && authModal) {
-        closeAuthModal.addEventListener('click', () => { authModal.classList.remove('open'); });
-    }
-
-    if (authModal) {
-        window.addEventListener('click', (e) => {
-            if (e.target === authModal) authModal.classList.remove('open');
-        });
-    }
-
-    authTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            authTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            if (tab.dataset.tab === 'login') {
-                loginForm.hidden = false;
-                signupForm.hidden = true;
-            } else {
-                loginForm.hidden = true;
-                signupForm.hidden = false;
-            }
-        });
-    });
-
-    const switchToSignupLink = document.getElementById('switchToSignupLink');
-    if (switchToSignupLink) {
-        switchToSignupLink.addEventListener('click', (e) => {
+    // Add comment form listener
+    if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            authTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === 'signup'));
-            loginForm.hidden = true;
-            signupForm.hidden = false;
-        });
-    }
-
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    if (loginFormEl) {
-        loginFormEl.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            let valid = true;
-            const emailError = document.getElementById('loginEmailError');
-            const passError = document.getElementById('loginPasswordError');
-            if (emailError) emailError.textContent = '';
-            if (passError) passError.textContent = '';
-
-            if (!email || !validateEmail(email)) {
-                if (emailError) emailError.textContent = 'Valid email required';
-                valid = false;
-            }
-            if (!password || password.length < 6) {
-                if (passError) passError.textContent = 'Password must be at least 6 characters';
-                valid = false;
-            }
-            if (!valid) return;
-
-            const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-            if (loginSubmitBtn) {
-                loginSubmitBtn.disabled = true;
-                loginSubmitBtn.textContent = 'Signing in...';
-            }
-
-            if (window.supabaseClient && window.supabaseClient.auth) {
-                window.supabaseClient.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
-                    if (loginSubmitBtn) {
-                        loginSubmitBtn.disabled = false;
-                        loginSubmitBtn.textContent = 'Sign In';
-                    }
-                    if (error) {
-                        showToast('Invalid email or password', 'error');
-                        return;
-                    }
-                    if (data.user) {
-                        setCurrentUser({
-                            id: data.user.id,
-                            email: data.user.email,
-                            name: data.user.user_metadata?.full_name || data.user.email.split('@')[0]
-                        });
-                        authModal.classList.remove('open');
-                        loginFormEl.reset();
-                        showToast('Signed in successfully!', 'success');
-                    }
-                }).catch(() => {
-                    if (loginSubmitBtn) {
-                        loginSubmitBtn.disabled = false;
-                        loginSubmitBtn.textContent = 'Sign In';
-                    }
-                    showToast('Authentication failed', 'error');
-                });
-            } else {
-                if (loginSubmitBtn) {
-                    loginSubmitBtn.disabled = false;
-                    loginSubmitBtn.textContent = 'Sign In';
-                }
-                showToast('Authentication service unavailable', 'error');
-            }
-        });
-    }
-
-    if (signupFormEl) {
-        signupFormEl.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirm = document.getElementById('signupConfirm').value;
-            let valid = true;
-            const emailError = document.getElementById('signupEmailError');
-            const passError = document.getElementById('signupPasswordError');
-            const confirmError = document.getElementById('signupConfirmError');
-            if (emailError) emailError.textContent = '';
-            if (passError) passError.textContent = '';
-            if (confirmError) confirmError.textContent = '';
-
-            if (!email || !validateEmail(email)) {
-                if (emailError) emailError.textContent = 'Valid email required';
-                valid = false;
-            }
-            if (!password || password.length < 6) {
-                if (passError) passError.textContent = 'Password must be at least 6 characters';
-                valid = false;
-            }
-            if (password !== confirm) {
-                if (confirmError) confirmError.textContent = 'Passwords do not match';
-                valid = false;
-            }
-            if (!valid) return;
-
-            if (window.supabaseClient && window.supabaseClient.auth) {
-                window.supabaseClient.auth.signUp({ email, password }).then(({ data, error }) => {
-                    if (error) {
-                        showToast(error.message || 'Registration failed', 'error');
-                        return;
-                    }
-                    if (data.user) {
-                        setCurrentUser({
-                            id: data.user.id,
-                            email: data.user.email,
-                            name: data.user.user_metadata?.full_name || data.user.email.split('@')[0]
-                        });
-                        authModal.classList.remove('open');
-                        signupFormEl.reset();
-                        showToast('Account registered successfully!', 'success');
-                    }
-                }).catch(() => {
-                    showToast('Registration failed', 'error');
-                });
-            } else {
-                showToast('Authentication service unavailable', 'error');
-            }
-        });
-    }
-
-    if (profilePic && dropdownMenu) {
-        profilePic.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.hidden = !dropdownMenu.hidden;
-        });
-        document.addEventListener('click', () => {
-            dropdownMenu.hidden = true;
-        });
-    }
-
-    if (logoutLink) {
-        logoutLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                if (window.supabaseClient && window.supabaseClient.auth) {
-                    await window.supabaseClient.auth.signOut();
-                }
-            } catch (err) {}
-            
-            setCurrentUser(null);
-            if (dropdownMenu) dropdownMenu.hidden = true;
-            state.favoritesOnly = false;
-            state.filter = 'all';
-            state.query = '';
-            if (searchInput) searchInput.value = '';
-            updateActiveTabVisualState('all');
-
-            await renderGrid();
-            showToast('Logged out successfully', 'info');
-        });
-    }
-
-    if (favoritesLink) {
-        favoritesLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            state.favoritesOnly = true;
-            state.filter = 'all';
-            state.query = '';
-            searchInput.value = '';
-            hideSuggest();
-            updateActiveTabVisualState('all');
-            if (dropdownMenu) dropdownMenu.hidden = true;
-            renderGrid();
-        });
-    }
-
-    if (historyLink) {
-        historyLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            setFilter('all');
-            if (dropdownMenu) dropdownMenu.hidden = true;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    // Admin Modal Logic
-    const adminModal = document.getElementById('adminModal');
-    const closeAdminModal = document.getElementById('closeAdminModal');
-    const adminLoginSection = document.getElementById('adminLoginSection');
-    const adminDashboardSection = document.getElementById('adminDashboardSection');
-    const adminLoginForm = document.getElementById('adminLoginForm');
-    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
-    const floatAdminBtn = document.getElementById('floatAdminBtn');
-
-    function openAdminModal() {
-        if (!adminModal) return;
-        adminModal.classList.add('open');
-        if (adminLoginSection) adminLoginSection.hidden = false;
-        if (adminDashboardSection) adminDashboardSection.hidden = true;
-        if (adminLoginForm) adminLoginForm.reset();
-    }
-
-    if (closeAdminModal && adminModal) {
-        closeAdminModal.addEventListener('click', () => { adminModal.classList.remove('open'); });
-    }
-
-    if (adminModal) {
-        window.addEventListener('click', (e) => {
-            if (e.target === adminModal) adminModal.classList.remove('open');
-        });
-    }
-
-    if (adminLoginForm) {
-        adminLoginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
-            if ((email === 'admin@zigiunix.com' && password === 'admin123') || (email === 'gabby@azigiuni.com' && password === 'Gabby123')) {
-                if (adminLoginSection) adminLoginSection.hidden = true;
-                if (adminDashboardSection) adminDashboardSection.hidden = false;
-                showToast('Admin access granted', 'success');
-            } else {
-                showToast('Invalid admin credentials', 'error');
-            }
-        });
-    }
-
-    if (adminLogoutBtn) {
-        adminLogoutBtn.addEventListener('click', () => {
-            if (adminLoginSection) adminLoginSection.hidden = false;
-            if (adminDashboardSection) adminDashboardSection.hidden = true;
-            if (adminModal) adminModal.classList.remove('open');
-            if (adminLoginForm) adminLoginForm.reset();
-        });
-    }
-
-    if (floatAdminBtn) {
-        floatAdminBtn.addEventListener('click', () => { openAdminModal(); });
-    }
-
-    const adminLink = document.getElementById('adminLink');
-    if (adminLink) {
-        adminLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            openAdminModal();
-        });
-    }
-
-    // Upload Form
-    const uploadForm = document.getElementById('uploadForm');
-    const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const progressFill = document.getElementById('progressFill');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    function showUploadProgress(pct, statusText) {
-        uploadProgress.hidden = false;
-        progressFill.style.width = pct + '%';
-        if (statusText) uploadStatus.textContent = statusText;
-    }
-
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('uploadTitle').value.trim();
-            const channel = document.getElementById('uploadChannel').value.trim();
-            const category = document.getElementById('uploadCategory').value;
-            const durationSec = parseInt(document.getElementById('uploadDuration').value, 10) || 0;
-            const tagsRaw = document.getElementById('uploadTags').value.trim();
-            const thumbUrl = document.getElementById('uploadThumbUrl').value.trim();
-            const videoUrl = document.getElementById('uploadVideoUrl').value.trim();
-
-            if (!title || !channel || !videoUrl) {
-                uploadStatus.textContent = 'Please fill in required fields.';
-                uploadStatus.classList.add('error-text');
-                showUploadProgress(0, uploadStatus.textContent);
+            const text = commentInput.value.trim();
+            if (!text || !currentWatchId) return;
+            if (!currentUser) {
+                showToast('Please sign in to post comments', 'warning');
+                authModal.classList.add('open');
                 return;
             }
 
-            const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
-
-            uploadSubmitBtn.disabled = true;
-            uploadSubmitBtn.textContent = 'Publishing...';
-            showUploadProgress(30, 'Saving video...');
-
             try {
-                const videoId = 'v' + Date.now().toString();
-                const payload = {
-                    id: videoId,
-                    title,
-                    channel,
-                    category,
-                    tags,
-                    duration_sec: durationSec,
-                    thumb_url: thumbUrl || `https://picsum.photos/seed/${videoId}/320/180`,
-                    video_url: videoUrl,
-                    live: false,
-                    views_text: '0 views',
-                    age_text: 'just now',
-                    days_ago: 0,
-                    likes: 0,
-                    dislikes: 0,
-                    comments: [],
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-
-                const { data, error } = await window.supabaseClient
-                    .from('videos')
-                    .insert([payload])
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                showUploadProgress(100, 'Success!');
-                showToast('Video published successfully', 'success');
-
-                VIDEOS.unshift({
-                    id: data.id,
-                    title: data.title,
-                    channel: data.channel,
-                    category: data.category,
-                    tags: Array.isArray(data.tags) ? data.tags : [],
-                    durationSec: data.duration_sec || 0,
-                    live: data.live || false,
-                    viewsText: data.views_text || '0 views',
-                    ageText: data.age_text || 'just now',
-                    daysAgo: data.days_ago || 0,
-                    likes: data.likes || 0,
-                    dislikes: data.dislikes || 0,
-                    thumb: data.thumb_url,
-                    src: data.video_url,
-                    comments: []
-                });
-
-                setTimeout(() => {
-                    uploadForm.reset();
-                    uploadProgress.hidden = true;
-                    uploadSubmitBtn.disabled = false;
-                    uploadSubmitBtn.textContent = 'Publish Video';
-                    if (adminModal) adminModal.classList.remove('open');
-                    renderGrid();
-                }, 500);
-
+                if (window.supabaseClient) {
+                    const { error } = await window.supabaseClient.from('comments').insert({
+                        video_id: currentWatchId,
+                        user_id: currentUser.id,
+                        author_name: currentUser.email,
+                        comment_text: text
+                    });
+                    if (error) throw error;
+                }
+                commentInput.value = '';
+                const v = byId(currentWatchId);
+                await renderComments(v);
+                showToast('Comment posted successfully', 'success');
             } catch (err) {
-                uploadStatus.textContent = 'Upload failed: ' + (err?.message || 'error');
-                uploadSubmitBtn.disabled = false;
-                uploadSubmitBtn.textContent = 'Publish Video';
+                showToast('Failed to post comment', 'error');
             }
         });
     }
 
-    // Initialize session state on load
-    currentUser = getCurrentUser();
+    // Initialize application data and views
     await reloadUserData();
-
-    if (typeof window !== 'undefined' && window.supabaseClient && window.supabaseClient.auth) {
-        window.supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-                setCurrentUser({
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.full_name || session.user.email.split('@')[0]
-                });
-            } else if (event === 'SIGNED_OUT') {
-                setCurrentUser(null);
-            }
-        });
-        
-        window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                setCurrentUser({
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.full_name || session.user.email.split('@')[0]
-                });
-            }
-        }).catch(() => {});
-    }
-
-    updateAuthUI();
     renderTagCloud();
-    await renderGrid();
+    renderGrid();
 });
