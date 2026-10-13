@@ -45,7 +45,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
@@ -127,7 +127,7 @@ body.menu-open {
 
 .search-bar {
     display: flex;
-    width: 40%;
+    width: 100%;
     max-width: 600px;
 }
 
@@ -398,7 +398,7 @@ body.menu-open {
     cursor: pointer;
     transition: all var(--transition-speed) ease;
     border: 1px solid var(--border-color);
-    opacity: 0;
+    opacity: 1;
     box-shadow: var(--shadow-sm);
 }
 
@@ -425,7 +425,7 @@ body.menu-open {
     transition: transform 0.5s ease;
 }
 
-.video-card.previewing .thumbnail-wrapper img {
+.video-card:hover .thumbnail-wrapper img {
     transform: scale(1.06);
 }
 
@@ -954,6 +954,11 @@ body.light-mode .btn-gate.reject:hover { background-color: #d5d5d5; }
 }
 
 .suggest-item {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
     padding: 10px 12px;
     font-size: 14px;
     color: #dddddd;
@@ -1060,6 +1065,12 @@ body.light-mode .btn-gate.reject:hover { background-color: #d5d5d5; }
 .history-item {
     flex: 0 0 168px;
     cursor: pointer;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font: inherit;
 }
 
 .history-item img {
@@ -1398,6 +1409,14 @@ body.light-mode .btn-gate.reject:hover { background-color: #d5d5d5; }
 }
 
 @media (max-width: 600px) {
+    .navbar { gap: 8px; }
+    .nav-left { gap: 4px; }
+    .search-wrap { width: auto; min-width: 0; flex: 1; }
+    .search-bar { width: 100%; }
+    .user-menu { gap: 6px; }
+    .btn-login { white-space: nowrap; }
+    .logo { white-space: nowrap; }
+    .form-row { grid-template-columns: 1fr !important; }
     .content { padding: 12px; }
     .content h2 { font-size: 20px; margin-bottom: 14px; }
     .filter-chips { gap: 8px; margin-bottom: 16px; }
@@ -1419,4 +1438,13 @@ body.light-mode .btn-gate.reject:hover { background-color: #d5d5d5; }
     .history-item { flex-basis: 145px; }
     .history-item img { width: 145px; height: 82px; }
     .history-title { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

@@ -1,291 +1,55 @@
 document.addEventListener('DOMContentLoaded', async () => {
-
-    // ==========================================================
-    // 1. DATA MODEL
-    // ==========================================================
-    const SAMPLE = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
-    const LEGACY_SAMPLE_PREFIX = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
-    const seedThumb = (s) => `https://picsum.photos/seed/${s}/320/180`;
-
-    const fallbackVideos = Array.isArray(window.VIDEOS) && window.VIDEOS.length
-        ? window.VIDEOS
-        : [
-            { id: 'v1', title: 'Global University Campus Tour & Student Life Overview', channel: 'EduNetwork', viewsText: '50K views', ageText: '2 days ago', daysAgo: 2, durationSec: 765, category: 'universities', tags: ['newest', 'campus'], likes: 1204, dislikes: 31, thumb: 'https://picsum.photos/seed/azigi1/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', comments: [{ author: 'CampusKid', time: '1 day ago', text: 'The new library wing looks amazing!' }] },
-            { id: 'v2', title: 'Late Night Adult Panel Discussion: Politics & Philosophy (18+)', channel: 'NightTalkers', viewsText: '120K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'panel'], likes: 8811, dislikes: 204, thumb: 'https://picsum.photos/seed/azigi2/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', comments: [{ author: 'NightOwl', time: '2 hours ago', text: 'Great points tonight.' }] },
-            { id: 'v3', title: 'Introduction to Data Science & Analytics Lecture Series', channel: 'UniLectures', viewsText: '15K views', ageText: '5 hours ago', daysAgo: 0, durationSec: 2720, category: 'universities', tags: ['trending', 'lecture'], likes: 934, dislikes: 12, thumb: 'https://picsum.photos/seed/azigi3/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', comments: [] },
-            { id: 'v4', title: 'Virtual Reality Gaming Lounge Live Session (18+)', channel: 'PixelStreams', viewsText: '31K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'gaming'], likes: 4102, dislikes: 87, thumb: 'https://picsum.photos/seed/azigi4/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', comments: [] },
-            { id: 'v5', title: 'Final Exam Study Tips: 8 Focus Techniques That Work', channel: 'StudySmart', viewsText: '203K views', ageText: '1 week ago', daysAgo: 7, durationSec: 245, category: 'universities', tags: ['newest', 'study'], likes: 5610, dislikes: 74, thumb: 'https://picsum.photos/seed/azigi5/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', comments: [{ author: 'GradStudent', time: '3 days ago', text: 'Technique 6 changed my semester.' }] },
-            { id: 'v6', title: 'After-Hours Comedy Open Mic Night (18+)', channel: 'LaughTrack', viewsText: '12K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['comedy'], likes: 2210, dislikes: 40, thumb: 'https://picsum.photos/seed/azigi6/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', comments: [] },
-            { id: 'v7', title: 'Online Degrees Q&A: Admissions, Costs & Financial Aid', channel: 'EduNetwork', viewsText: '61K views', ageText: '3 weeks ago', daysAgo: 21, durationSec: 1020, category: 'universities', tags: ['degrees', 'talk'], likes: 1543, dislikes: 22, thumb: 'https://picsum.photos/seed/azigi7/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', comments: [] },
-            { id: 'v8', title: 'Midnight Music Jam Session - Acoustic Covers (18+)', channel: 'NightOwlSessions', viewsText: '18K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['music'], likes: 3311, dislikes: 55, thumb: 'https://picsum.photos/seed/azigi8/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4', comments: [] },
-            { id: 'v9', title: 'Research Symposium: Climate Science Keynote', channel: 'UniLectures', viewsText: '7.2K views', ageText: '1 month ago', daysAgo: 30, durationSec: 5460, category: 'universities', tags: ['research', 'lecture'], likes: 640, dislikes: 18, thumb: 'https://picsum.photos/seed/azigi9/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', comments: [] },
-            { id: 'v10', title: 'Neon Dance Party Live Stream (18+)', channel: 'ClubPulse', viewsText: '77K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'dance'], likes: 6654, dislikes: 130, thumb: 'https://picsum.photos/seed/azigi10/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', comments: [] },
-            { id: 'v11', title: 'Campus Library Resources & Research Database Walkthrough', channel: 'StudySmart', viewsText: '9.8K views', ageText: '4 days ago', daysAgo: 4, durationSec: 270, category: 'universities', tags: ['newest', 'study', 'campus'], likes: 812, dislikes: 9, thumb: 'https://picsum.photos/seed/azigi11/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', comments: [] },
-            { id: 'v12', title: 'Uncensored Relationship Q&A Show (18+)', channel: 'HeartToHeart', viewsText: '53K views', ageText: '12 days ago', daysAgo: 12, durationSec: 780, category: 'live-18', tags: ['talk'], likes: 2987, dislikes: 96, thumb: 'https://picsum.photos/seed/azigi12/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4', comments: [] },
-            { id: 'v13', title: 'Dance Challenge Compilation: Viral TikTok Moves', channel: 'DanceCraze', viewsText: '840K views', ageText: '1 day ago', daysAgo: 1, durationSec: 180, category: 'tiktokers', tags: ['trending', 'dance', 'newest'], likes: 45210, dislikes: 892, thumb: 'https://picsum.photos/seed/azigi13/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', comments: [{ author: 'DanceFan', time: '5 hours ago', text: 'These moves are insane!' }] },
-            { id: 'v14', title: 'Quick Recipe Hack: 30 Second Meal Ideas', channel: 'ChefTok', viewsText: '320K views', ageText: '2 days ago', daysAgo: 2, durationSec: 30, category: 'tiktokers', tags: ['food', 'recipe'], likes: 18932, dislikes: 245, thumb: 'https://picsum.photos/seed/azigi14/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', comments: [] },
-            { id: 'v15', title: 'Comedy Skit: Awkward First Date Situations', channel: 'FunnyTok', viewsText: '1.2M views', ageText: '3 hours ago', daysAgo: 0, durationSec: 45, category: 'tiktokers', tags: ['trending', 'comedy', 'newest'], likes: 67421, dislikes: 1283, thumb: 'https://picsum.photos/seed/azigi15/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', comments: [{ author: 'LaughOutLoud', time: '1 hour ago', text: 'So relatable!' }] },
-            { id: 'v16', title: 'Morning Workout Motivation: 5 Min Routine', channel: 'FitTok', viewsText: '210K views', ageText: '5 days ago', daysAgo: 5, durationSec: 300, category: 'tiktokers', tags: ['fitness', 'workout'], likes: 12543, dislikes: 167, thumb: 'https://picsum.photos/seed/azigi16/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', comments: [] }
-        ];
-
-    let VIDEOS = fallbackVideos;
-    
-    async function loadSupabaseVideos() {
-        try {
-            if (window.supabaseClient) {
-                const { data, error } = await window.supabaseClient
-                    .from('videos')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                if (!error && Array.isArray(data) && data.length > 0) {
-                    VIDEOS = data.map(v => ({
-                        id: v.id,
-                        title: v.title,
-                        channel: v.channel,
-                        category: v.category,
-                        tags: Array.isArray(v.tags) ? v.tags : (v.tags || []),
-                        durationSec: v.duration_sec || 0,
-                        live: v.live || false,
-                        viewsText: v.views_text || '0 views',
-                        ageText: v.age_text || 'just now',
-                        daysAgo: v.days_ago || 0,
-                        likes: v.likes || 0,
-                        dislikes: v.dislikes || 0,
-                        thumb: v.thumb_url || `https://picsum.photos/seed/${v.id}/320/180`,
-                        src: v.video_url || SAMPLE,
-                        comments: v.comments || []
-                    }));
-                    return true;
-                }
-            }
-        } catch (error) {
-            console.log('Failed to load videos from database:', error);
-        }
-        VIDEOS = fallbackVideos;
-        return false;
-    }
-    await loadSupabaseVideos();
-
-    // ==========================================================
-    // DB HELPERS FOR USER DATA
-    // ==========================================================
-    async function loadUserFavorites(userId) {
-        try {
-            if (!window.supabaseClient || !userId) return readJSON(getUserKey('Favorites'), []);
-            const { data, error } = await window.supabaseClient
-                .from('favorites')
-                .select('video_id')
-                .eq('user_id', userId);
-            if (error) throw error;
-            return (data || []).map(f => f.video_id);
-        } catch (e) {
-            console.error('Failed to load favorites:', e);
-            return readJSON(getUserKey('Favorites'), []);
-        }
-    }
-    
-    async function addToFavorites(userId, videoId) {
-        try {
-            if (!window.supabaseClient || !userId) {
-                const favs = readJSON(getUserKey('Favorites'), []);
-                if (!favs.includes(videoId)) favs.push(videoId);
-                writeJSON(getUserKey('Favorites'), favs);
-                return true;
-            }
-            const { error } = await window.supabaseClient
-                .from('favorites')
-                .insert([{ user_id: userId, video_id: videoId }]);
-            if (error && error.code !== '23505') throw error;
-            return true;
-        } catch (e) {
-            console.error('Failed to add favorite:', e);
-            const favs = readJSON(getUserKey('Favorites'), []);
-            if (!favs.includes(videoId)) favs.push(videoId);
-            writeJSON(getUserKey('Favorites'), favs);
-            return false;
-        }
-    }
-    
-    async function removeFromFavorites(userId, videoId) {
-        try {
-            if (!window.supabaseClient || !userId) {
-                const favs = readJSON(getUserKey('Favorites'), []).filter(id => id !== videoId);
-                writeJSON(getUserKey('Favorites'), favs);
-                return true;
-            }
-            const { error } = await window.supabaseClient
-                .from('favorites')
-                .delete()
-                .eq('user_id', userId)
-                .eq('video_id', videoId);
-            if (error) throw error;
-            return true;
-        } catch (e) {
-            console.error('Failed to remove favorite:', e);
-            const favs = readJSON(getUserKey('Favorites'), []).filter(id => id !== videoId);
-            writeJSON(getUserKey('Favorites'), favs);
-            return false;
-        }
-    }
-    
-    let userFavorites = [];
-    
-    async function loadUserRatings(userId) {
-        try {
-            if (!window.supabaseClient || !userId) return readJSON(getUserKey('Ratings'), {});
-            const { data, error } = await window.supabaseClient
-                .from('ratings')
-                .select('*')
-                .eq('user_id', userId);
-            if (error) throw error;
-            const result = {};
-            (data || []).forEach(r => { result[r.video_id] = { up: 0, down: 0, mine: r.rating }; });
-            return result;
-        } catch (e) {
-            console.error('Failed to load ratings:', e);
-            return readJSON(getUserKey('Ratings'), {});
-        }
-    }
-    
-    let userRatings = {};
-    
-    async function loadWatchHistory(userId) {
-        try {
-            if (!window.supabaseClient || !userId) return readJSON(getUserKey('History'), []);
-            const { data, error } = await window.supabaseClient
-                .from('watch_history')
-                .select('video_id')
-                .eq('user_id', userId)
-                .order('watched_at', { ascending: false })
-                .limit(12);
-            if (error) throw error;
-            return (data || []).map(h => h.video_id);
-        } catch (e) {
-            console.error('Failed to load history:', e);
-            return readJSON(getUserKey('History'), []);
-        }
-    }
-
-    // ==========================================================
-    // 2. LAYOUT HOOKS & STATE
-    // ==========================================================
-    const videoGrid = document.getElementById('videoGrid');
-    const sectionTitle = document.getElementById('sectionTitle');
-    const filterChips = document.querySelectorAll('.chip');
-    const sidebarItems = document.querySelectorAll('.nav-item');
-    const tagCloud = document.getElementById('tagCloud');
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchSuggest = document.getElementById('searchSuggest');
-    const sortBtns = document.querySelectorAll('.sort-btn');
-    const durationFilter = document.getElementById('durationFilter');
-    const emptyState = document.getElementById('emptyState');
-    const emptyStateMsg = document.getElementById('emptyStateMsg');
-    const historyRow = document.getElementById('historyRow');
-    const historyTrack = document.getElementById('historyTrack');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const menuToggleBtn = document.getElementById('menuToggleBtn');
-    const sidebarNav = document.getElementById('sidebarNav');
-    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-    const userDropdown = document.getElementById('userDropdown');
-    const profilePic = document.getElementById('profilePic');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-
-    const videoModal = document.getElementById('videoModal');
-    const closeModal = document.getElementById('closeModal');
-    const modalVideoTitle = document.getElementById('modalVideoTitle');
-    const modalVideoMeta = document.getElementById('modalVideoMeta');
-    const watchPlayer = document.getElementById('watchPlayer');
-    const playerFallback = document.getElementById('playerFallback');
-    const watchLive = document.getElementById('watchLive');
-    const likeBtn = document.getElementById('likeBtn');
-    const dislikeBtn = document.getElementById('dislikeBtn');
-    const likeCount = document.getElementById('likeCount');
-    const dislikeCount = document.getElementById('dislikeCount');
-    const watchViews = document.getElementById('watchViews');
-    const commentForm = document.getElementById('commentForm');
-    const commentInput = document.getElementById('commentInput');
-    const commentList = document.getElementById('commentList');
-    const commentCount = document.getElementById('commentCount');
-    const relatedList = document.getElementById('relatedList');
-
-    const ageGateModal = document.getElementById('ageGateModal');
-    const ageGateAcceptBtn = document.getElementById('ageGateAcceptBtn');
-    const ageGateRejectBtn = document.getElementById('ageGateRejectBtn');
-
-    let isAdultVerified = localStorage.getItem('adultVerified') === 'true';
-    let pendingFilterTarget = null;
-    let currentWatchId = null;
-    let currentUser = getCurrentUser();
-
+    const SAMPLE = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4';
+    const SAFE_FALLBACK_VIDEOS = [
+        { id: 'v1', title: 'Global University Campus Tour & Student Life Overview', channel: 'EduNetwork', viewsText: '50K views', ageText: '2 days ago', daysAgo: 2, durationSec: 765, category: 'universities', tags: ['newest', 'campus'], likes: 1204, dislikes: 31, thumb: 'https://picsum.photos/seed/azigi1/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', comments: [{ author: 'CampusKid', time: '1 day ago', text: 'The new library wing looks amazing!' }] },
+        { id: 'v2', title: 'Late Night Debate: Creativity, Culture & Future Thinking', channel: 'NightTalkers', viewsText: '120K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'panel'], likes: 8811, dislikes: 204, thumb: 'https://picsum.photos/seed/azigi2/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', comments: [{ author: 'NightOwl', time: '2 hours ago', text: 'Great points tonight.' }] },
+        { id: 'v3', title: 'Introduction to Data Science & Analytics Lecture Series', channel: 'UniLectures', viewsText: '15K views', ageText: '5 hours ago', daysAgo: 0, durationSec: 2720, category: 'universities', tags: ['trending', 'lecture'], likes: 934, dislikes: 12, thumb: 'https://picsum.photos/seed/azigi3/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', comments: [] },
+        { id: 'v4', title: 'Virtual Reality Gaming Lounge Live Session', channel: 'PixelStreams', viewsText: '31K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'gaming'], likes: 4102, dislikes: 87, thumb: 'https://picsum.photos/seed/azigi4/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', comments: [] },
+        { id: 'v5', title: 'Final Exam Study Tips: 8 Focus Techniques That Work', channel: 'StudySmart', viewsText: '203K views', ageText: '1 week ago', daysAgo: 7, durationSec: 245, category: 'universities', tags: ['newest', 'study'], likes: 5610, dislikes: 74, thumb: 'https://picsum.photos/seed/azigi5/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', comments: [{ author: 'GradStudent', time: '3 days ago', text: 'Technique 6 changed my semester.' }] },
+        { id: 'v6', title: 'After-Hours Comedy Open Mic Night', channel: 'LaughTrack', viewsText: '12K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['comedy'], likes: 2210, dislikes: 40, thumb: 'https://picsum.photos/seed/azigi6/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', comments: [] },
+        { id: 'v7', title: 'Online Degrees Q&A: Admissions, Costs & Financial Aid', channel: 'EduNetwork', viewsText: '61K views', ageText: '3 weeks ago', daysAgo: 21, durationSec: 1020, category: 'universities', tags: ['degrees', 'talk'], likes: 1543, dislikes: 22, thumb: 'https://picsum.photos/seed/azigi7/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', comments: [] },
+        { id: 'v8', title: 'Midnight Music Jam Session - Acoustic Covers', channel: 'NightOwlSessions', viewsText: '18K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['music'], likes: 3311, dislikes: 55, thumb: 'https://picsum.photos/seed/azigi8/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4', comments: [] },
+        { id: 'v9', title: 'Research Symposium: Climate Science Keynote', channel: 'UniLectures', viewsText: '7.2K views', ageText: '1 month ago', daysAgo: 30, durationSec: 5460, category: 'universities', tags: ['research', 'lecture'], likes: 640, dislikes: 18, thumb: 'https://picsum.photos/seed/azigi9/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', comments: [] },
+        { id: 'v10', title: 'Neon Dance Party Live Stream', channel: 'ClubPulse', viewsText: '77K watching', ageText: 'streaming now', daysAgo: 0, durationSec: 0, live: true, category: 'live-18', tags: ['trending', 'dance'], likes: 6654, dislikes: 130, thumb: 'https://picsum.photos/seed/azigi10/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', comments: [] },
+        { id: 'v11', title: 'Campus Library Resources & Research Database Walkthrough', channel: 'StudySmart', viewsText: '9.8K views', ageText: '4 days ago', daysAgo: 4, durationSec: 270, category: 'universities', tags: ['newest', 'study', 'campus'], likes: 812, dislikes: 9, thumb: 'https://picsum.photos/seed/azigi11/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', comments: [] },
+        { id: 'v12', title: 'Community Relationship Q&A Show', channel: 'HeartToHeart', viewsText: '53K views', ageText: '12 days ago', daysAgo: 12, durationSec: 780, category: 'live-18', tags: ['talk'], likes: 2987, dislikes: 96, thumb: 'https://picsum.photos/seed/azigi12/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4', comments: [] },
+        { id: 'v13', title: 'Dance Challenge Compilation: Viral TikTok Moves', channel: 'DanceCraze', viewsText: '840K views', ageText: '1 day ago', daysAgo: 1, durationSec: 180, category: 'tiktokers', tags: ['trending', 'dance', 'newest'], likes: 45210, dislikes: 892, thumb: 'https://picsum.photos/seed/azigi13/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', comments: [{ author: 'DanceFan', time: '5 hours ago', text: 'These moves are insane!' }] },
+        { id: 'v14', title: 'Quick Recipe Hack: 30 Second Meal Ideas', channel: 'ChefTok', viewsText: '320K views', ageText: '2 days ago', daysAgo: 2, durationSec: 30, category: 'tiktokers', tags: ['food', 'recipe'], likes: 18932, dislikes: 245, thumb: 'https://picsum.photos/seed/azigi14/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', comments: [] },
+        { id: 'v15', title: 'Comedy Skit: Awkward First Date Situations', channel: 'FunnyTok', viewsText: '1.2M views', ageText: '3 hours ago', daysAgo: 0, durationSec: 45, category: 'tiktokers', tags: ['trending', 'comedy', 'newest'], likes: 67421, dislikes: 1283, thumb: 'https://picsum.photos/seed/azigi15/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', comments: [{ author: 'LaughOutLoud', time: '1 hour ago', text: 'So relatable!' }] },
+        { id: 'v16', title: 'Morning Workout Motivation: 5 Min Routine', channel: 'FitTok', viewsText: '210K views', ageText: '5 days ago', daysAgo: 5, durationSec: 300, category: 'tiktokers', tags: ['fitness', 'workout'], likes: 12543, dislikes: 167, thumb: 'https://picsum.photos/seed/azigi16/320/180', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', comments: [] }
+    ];
     const state = { filter: 'all', query: '', sort: 'relevance', duration: 'any', favoritesOnly: false };
-    const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-
-    function getCurrentUser() {
-        const stored = localStorage.getItem('azigiCurrentUser');
-        if (stored) {
-            try { return JSON.parse(stored); } catch (e) { return null; }
-        }
-        return null;
-    }
-
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+    let videos = [];
+    let currentUser = readJSON('azigiCurrentUser', null);
     let userProfile = null;
-    
-    async function loadUserProfile(userId) {
-        if (!window.supabaseClient || !userId) return null;
-        const { data, error } = await window.supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-        if (error) {
-            if (error.code === 'PGRST205' || error.message?.includes("Could not find the table 'public.profiles'")) {
-                throw new Error("The Supabase profiles table is missing. Run setup-sql.sql in the Supabase SQL Editor, wait for the schema cache to refresh, and try again.");
-            }
-            throw error;
-        }
-        return data;
-    }
-    
-    async function reloadUserData() {
-        if (currentUser) {
-            userFavorites = await loadUserFavorites(currentUser.id);
-            userRatings = await loadUserRatings(currentUser.id);
-            try {
-                userProfile = await loadUserProfile(currentUser.id);
-            } catch (error) {
-                console.error('Failed to load user profile:', error);
-                userProfile = null;
-            }
-        } else {
-            userFavorites = [];
-            userRatings = {};
-            userProfile = null;
-        }
-    }
+    let currentWatchId = null;
+    let favorites = [];
+    let ratings = {};
+    let progress = {};
+    let suggestionIndex = -1;
 
-    async function setCurrentUser(user) {
-        currentUser = user;
-        if (user) {
-            localStorage.setItem('azigiCurrentUser', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('azigiCurrentUser');
-        }
-        await reloadUserData();
-        updateAuthUI();
-        renderGrid();
-        renderHistory();
-    }
+    const $ = (id) => document.getElementById(id);
+    const videoGrid = $('videoGrid');
+    const sectionTitle = $('sectionTitle');
+    const searchInput = $('searchInput');
+    const searchSuggest = $('searchSuggest');
+    const durationFilter = $('durationFilter');
+    const videoModal = $('videoModal');
+    const watchPlayer = $('watchPlayer');
+    const watchIframe = $('watchIframe');
+    const playerFallback = $('playerFallback');
+    const commentList = $('commentList');
+    const commentCount = $('commentCount');
+    const authModal = $('authModal');
+    const adminModal = $('adminModal');
+    const ageGateModal = $('ageGateModal');
 
-    // ==========================================================
-    // 3. STORAGE + UTILITIES
-    // ==========================================================
     function readJSON(key, fallback) {
         try {
-            const raw = localStorage.getItem(key);
-            return raw ? JSON.parse(raw) : fallback;
-        } catch (e) {
+            const value = localStorage.getItem(key);
+            return value === null ? fallback : JSON.parse(value);
+        } catch (error) {
             return fallback;
         }
     }
@@ -293,1139 +57,996 @@ document.addEventListener('DOMContentLoaded', async () => {
     function writeJSON(key, value) {
         try {
             localStorage.setItem(key, JSON.stringify(value));
-        } catch (e) {}
+        } catch (error) {
+            console.warn(`Unable to save ${key} in local storage.`, error);
+        }
+    }
+
+    function userKey(key) {
+        return `azigi${key}_${currentUser?.id || 'guest'}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
     }
 
     function showToast(message, type = 'info') {
-        const container = document.getElementById('toastContainer');
+        const container = $('toastContainer');
         if (!container) return;
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.textContent = message;
         container.appendChild(toast);
-        setTimeout(() => {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 3000);
+        window.setTimeout(() => toast.remove(), 3200);
     }
 
-    function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, (c) => (
-            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-        ));
+    function syncBodyLock() {
+        document.body.style.overflow = document.querySelector('.video-modal.open, .auth-modal.open, .age-gate-modal.open') ? 'hidden' : '';
     }
 
-    function formatDuration(sec) {
-        const h = Math.floor(sec / 3600);
-        const m = Math.floor((sec % 3600) / 60);
-        const s = sec % 60;
-        const mm = h ? String(m).padStart(2, '0') : String(m);
-        return (h ? h + ':' : '') + mm + ':' + String(s).padStart(2, '0');
+    function openModal(modal) {
+        modal?.classList.add('open');
+        syncBodyLock();
     }
 
-    function byId(id) {
-        return VIDEOS.find((v) => v.id === id);
+    function closeModal(modal) {
+        modal?.classList.remove('open');
+        syncBodyLock();
     }
 
-    function getPlayableSource(src) {
-        if (!src || src.startsWith(LEGACY_SAMPLE_PREFIX)) return SAMPLE;
-        try {
-            const url = new URL(src);
-            return /\.mp4$/i.test(url.pathname) ? src : SAMPLE;
-        } catch (error) {
-            return SAMPLE;
+    function normalizeVideo(video) {
+        return {
+            ...video,
+            id: String(video.id),
+            title: video.title || 'Untitled video',
+            channel: video.channel || 'Unknown creator',
+            category: video.category || 'universities',
+            tags: Array.isArray(video.tags) ? video.tags : [],
+            durationSec: Math.max(0, Number(video.durationSec ?? video.duration_sec) || 0),
+            live: Boolean(video.live),
+            views: Number(video.views) || 0,
+            viewsText: video.viewsText || video.views_text || `${Number(video.views) || 0} views`,
+            ageText: video.ageText || video.age_text || 'just now',
+            daysAgo: Number(video.daysAgo ?? video.days_ago) || 0,
+            likes: Number(video.likes) || 0,
+            dislikes: Number(video.dislikes) || 0,
+            thumb: video.thumb || video.thumb_url || `https://picsum.photos/seed/${encodeURIComponent(video.id)}/320/180`,
+            src: video.src || video.video_url || SAMPLE,
+            comments: Array.isArray(video.comments) ? video.comments : []
+        };
+    }
+
+    function sanitizeVideoList(items) {
+        if (!Array.isArray(items)) return [];
+        const forbidden = /(fuck|pussy|virgin|porn|sex|naked|xxx|adult content|horny|sweaty|doggy|volleyball)/i;
+        return items.filter((video) => {
+            const content = `${video.title || ''} ${video.channel || ''} ${(video.tags || []).join(' ')}`;
+            return !forbidden.test(content);
+        });
+    }
+
+    function applySafeVideoSource() {
+        const sanitized = sanitizeVideoList(window.VIDEOS);
+        const nextVideos = sanitized.length ? sanitized : SAFE_FALLBACK_VIDEOS;
+        window.VIDEOS = nextVideos.map((video) => ({
+            ...video,
+            title: String(video.title || '').replace(/(fuck|pussy|virgin|porn|sex|naked|xxx|adult content|horny|sweaty|doggy|volleyball)/gi, '').trim(),
+            channel: String(video.channel || '').replace(/(fuck|pussy|virgin|porn|sex|naked|xxx|adult content|horny|sweaty|doggy|volleyball)/gi, '').trim() || 'AZIGI Studio',
+            tags: Array.isArray(video.tags) ? video.tags.filter((tag) => !/(fuck|pussy|virgin|porn|sex|naked|xxx|adult content|horny|sweaty|doggy|volleyball)/i.test(tag)) : []
+        }));
+        return window.VIDEOS;
+    }
+
+    function ensureSafeFeed() {
+        const safeVideos = applySafeVideoSource().filter((video) => {
+            const title = `${video.title || ''} ${video.channel || ''} ${(video.tags || []).join(' ')}`;
+            return !/(fuck|pussy|virgin|porn|sex|naked|xxx|adult content|horny|sweaty|doggy|volleyball)/i.test(title);
+        });
+        window.VIDEOS = safeVideos.length ? safeVideos : SAFE_FALLBACK_VIDEOS;
+    }
+
+    ensureSafeFeed();
+
+    async function loadVideos() {
+        const localVideos = sanitizeVideoList(window.VIDEOS).length
+            ? sanitizeVideoList(window.VIDEOS).map(normalizeVideo)
+            : SAFE_FALLBACK_VIDEOS.map(normalizeVideo);
+        const client = window.supabaseClient;
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('videos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                if (Array.isArray(data) && data.length) {
+                    videos = data.map(normalizeVideo);
+                    return;
+                }
+            } catch (error) {
+                console.warn('Could not load videos from Supabase; using the local feed.', error);
+            }
+        }
+        videos = localVideos;
+        if (videos.length === 0) {
+            showToast('No videos are available. Check the connection or add videos to the feed.', 'warning');
         }
     }
 
     function isVideoAllowed(video) {
-        return video.category !== 'live-18' || isAdultVerified;
+        return true;
     }
 
-    // ==========================================================
-    // 4. ANIMATION CORE
-    // ==========================================================
-    function animateGridItems() {
-        const cards = videoGrid.querySelectorAll('.video-card');
-        cards.forEach((card, index) => {
-            card.getAnimations().forEach((anim) => anim.cancel());
-            card.animate([
-                { opacity: 0, transform: 'translateY(15px)' },
-                { opacity: 1, transform: 'translateY(0)' }
-            ], {
-                duration: 350,
-                delay: index * 40,
-                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                fill: 'both'
-            });
-        });
+    function readLocalValue(key) {
+        try { return localStorage.getItem(key); } catch (error) { return null; }
     }
 
-    // ==========================================================
-    // 5. LIGHT / DARK THEME MANAGER
-    // ==========================================================
-    const themeIcon = themeToggleBtn.querySelector('.theme-icon');
-    const themeText = themeToggleBtn.querySelector('.theme-text');
-    function renderTheme() {
-        const isLight = document.body.classList.contains('light-mode');
-        if (themeIcon) themeIcon.textContent = isLight ? '☀️' : '🌙';
-        if (themeText) themeText.textContent = 'Mode';
-    }
-    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-    renderTheme();
-
-    themeToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-        renderTheme();
-    });
-
-    // ==========================================================
-    // 6. FILTERING / SORTING PIPELINE & AUTH UI
-    // ==========================================================
-    function getVisibleVideos() {
-        let list = VIDEOS.filter((v) => {
-            if (!isVideoAllowed(v)) return false;
-
-            if (state.favoritesOnly) {
-                if (!isFavorite(v.id)) return false;
-            }
-
-            if (state.query) {
-                const haystack = (v.title + ' ' + v.channel + ' ' + v.tags.join(' ')).toLowerCase();
-                return haystack.includes(state.query);
-            }
-
-            const f = state.filter;
-            if (f === 'all') return true;
-            if (f === 'trending' || f === 'newest') return v.tags.includes(f);
-            if (f.startsWith('tag:')) return v.tags.includes(f.slice(4));
-            return v.category === f;
-        });
-
-        if (state.duration !== 'any') {
-            list = list.filter((v) => {
-                if (v.live) return false;
-                const mins = v.durationSec / 60;
-                if (state.duration === 'short') return mins < 5;
-                if (state.duration === 'medium') return mins >= 5 && mins <= 20;
-                return mins > 20;
-            });
+    function writeLocalValue(key, value) {
+        try { localStorage.setItem(key, value); } catch (error) {
+            console.warn(`Unable to save ${key} in local storage.`, error);
         }
+    }
 
-        if (state.sort === 'date') {
-            list = [...list].sort((a, b) => a.daysAgo - b.daysAgo);
-        } else if (state.sort === 'duration') {
-            list = [...list].sort((a, b) => b.durationSec - a.durationSec);
-        }
+    function getVideo(id) {
+        return videos.find((video) => video.id === String(id));
+    }
 
-        return list;
+    async function loadUserData() {
+        favorites = readJSON(userKey('Favorites'), []);
+        ratings = readJSON(userKey('Ratings'), {});
+        progress = readJSON(userKey('Progress'), {});
+        userProfile = null;
+        if (!currentUser || !window.supabaseClient) return;
+
+        const client = window.supabaseClient;
+        const [favoriteResult, ratingResult, progressResult, profileResult] = await Promise.all([
+            client.from('favorites').select('video_id').eq('user_id', currentUser.id),
+            client.from('ratings').select('video_id,rating').eq('user_id', currentUser.id),
+            client.from('video_progress').select('video_id,progress_sec').eq('user_id', currentUser.id),
+            client.from('profiles').select('*').eq('id', currentUser.id).maybeSingle()
+        ]);
+        if (favoriteResult.error) console.warn('Could not load favorites.', favoriteResult.error);
+        else favorites = (favoriteResult.data || []).map((item) => item.video_id);
+        if (ratingResult.error) console.warn('Could not load ratings.', ratingResult.error);
+        else ratings = Object.fromEntries((ratingResult.data || []).map((item) => [item.video_id, item.rating]));
+        if (progressResult.error) console.warn('Could not load watch progress.', progressResult.error);
+        else progress = Object.fromEntries((progressResult.data || []).map((item) => [item.video_id, item.progress_sec]));
+        if (profileResult.error) console.warn('Could not load profile.', profileResult.error);
+        else userProfile = profileResult.data;
     }
 
     function updateAuthUI() {
-        const loginBtn = document.getElementById('loginBtn');
-        const userDropdown = document.getElementById('userDropdown');
-        const userEmail = document.getElementById('userEmail');
-        const profilePic = document.getElementById('profilePic');
-        const dropdownMenu = document.getElementById('dropdownMenu');
-
-        if (loginBtn && userDropdown && userEmail && profilePic) {
-            if (currentUser) {
-                loginBtn.style.display = 'none';
-                userDropdown.style.display = 'inline-block';
-                userDropdown.hidden = false;
-                userEmail.textContent = currentUser.email || '';
-                profilePic.textContent = (currentUser.email || 'U').charAt(0).toUpperCase();
-            } else {
-                loginBtn.style.display = 'inline-block';
-                userDropdown.style.display = 'none';
-                userDropdown.hidden = true;
-                if (dropdownMenu) dropdownMenu.hidden = true;
-                userEmail.textContent = '';
-                profilePic.textContent = '';
-            }
+        const loginButton = $('loginBtn');
+        const userDropdown = $('userDropdown');
+        const profilePic = $('profilePic');
+        const dropdownMenu = $('dropdownMenu');
+        if (loginButton) loginButton.hidden = Boolean(currentUser);
+        if (userDropdown) {
+            userDropdown.hidden = !currentUser;
+            userDropdown.style.display = currentUser ? 'inline-block' : 'none';
         }
-
-    }
-
-    function closeSidebar() {
-        if (sidebarNav) sidebarNav.classList.remove('open');
-        if (sidebarBackdrop) sidebarBackdrop.classList.remove('open');
-        if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
-    }
-
-    function closeUserMenu() {
+        if (profilePic) {
+            profilePic.textContent = (currentUser?.name || currentUser?.email || 'U').charAt(0).toUpperCase();
+            profilePic.setAttribute('aria-label', currentUser ? `Account menu for ${currentUser.email}` : 'Account menu');
+        }
+        if ($('userEmail')) $('userEmail').textContent = currentUser?.email || '';
         if (dropdownMenu) dropdownMenu.hidden = true;
-        if (profilePic) profilePic.setAttribute('aria-expanded', 'false');
     }
 
-    function updateSectionTitle() {
-        if (state.favoritesOnly) {
-            sectionTitle.textContent = '❤️ Your Favorites';
-            return;
+    async function setCurrentUser(user) {
+        currentUser = user;
+        if (user) writeJSON('azigiCurrentUser', user);
+        else {
+            try { localStorage.removeItem('azigiCurrentUser'); } catch (error) { console.warn('Unable to clear saved account.', error); }
         }
-        if (state.query) {
-            sectionTitle.textContent = `Search Results for: "${searchInput.value}"`;
-            return;
-        }
-        const f = state.filter;
-        if (f === 'all') {
-            sectionTitle.textContent = 'Recommended Content';
-        } else if (f === 'live-18') {
-            sectionTitle.textContent = '🔴 Live 18+ Streaming Feeds';
-        } else if (f === 'universities') {
-            sectionTitle.textContent = '🏛️ Universities Content';
-        } else if (f === 'tiktokers') {
-            sectionTitle.textContent = '🎵 TikTokers Content';
-        } else if (f.startsWith('tag:')) {
-            sectionTitle.textContent = '🏷️ #' + f.slice(4);
-        } else {
-            sectionTitle.textContent = f.charAt(0).toUpperCase() + f.slice(1);
-        }
+        await loadUserData();
+        updateAuthUI();
+        renderGrid();
     }
 
-    // ==========================================================
-    // 7. HOVER PREVIEW THUMBNAILS (Cleaned)
-    // ==========================================================
-    function attachPreview(card, video) {
-        if (reducedMotion) return;
-        const img = card.querySelector('img');
-        const baseThumb = video.thumb;
-        let timer = null;
+    function durationLabel(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainder = seconds % 60;
+        return `${hours ? `${hours}:${String(minutes).padStart(2, '0')}` : minutes}:${String(remainder).padStart(2, '0')}`;
+    }
 
-        card.addEventListener('mouseenter', () => {
-            if (timer) return;
-            card.classList.add('previewing');
+    function matchesFilter(video) {
+        const filter = state.filter;
+        if (filter === 'all' || filter === 'worldwide') return true;
+        if (filter === 'trending' || filter === 'newest') return video.tags.includes(filter);
+        if (filter.startsWith('tag:')) return video.tags.includes(filter.slice(4));
+        return video.category === filter;
+    }
+
+    function getVisibleVideos() {
+        let list = videos.filter((video) => {
+            if (!isVideoAllowed(video)) return false;
+            if (state.favoritesOnly && !favorites.includes(video.id)) return false;
+            if (!matchesFilter(video)) return false;
+            if (state.query) {
+                const haystack = `${video.title} ${video.channel} ${video.tags.join(' ')}`.toLowerCase();
+                if (!haystack.includes(state.query)) return false;
+            }
+            return true;
         });
-
-        card.addEventListener('mouseleave', () => {
-            if (timer) clearInterval(timer);
-            timer = null;
-            img.src = baseThumb;
-            card.classList.remove('previewing');
-        });
+        if (state.duration !== 'any') {
+            list = list.filter((video) => {
+                if (video.live) return false;
+                const minutes = video.durationSec / 60;
+                if (state.duration === 'short') return minutes < 5;
+                if (state.duration === 'medium') return minutes >= 5 && minutes <= 20;
+                return minutes > 20;
+            });
+        }
+        if (state.sort === 'date') list = [...list].sort((a, b) => a.daysAgo - b.daysAgo);
+        if (state.sort === 'duration') list = [...list].sort((a, b) => b.durationSec - a.durationSec);
+        return list;
     }
 
-    // ==========================================================
-    // 8. GRID / SHELF / TAG RENDERING
-    // ==========================================================
-    function buildCard(video) {
-        const card = document.createElement('div');
-        card.className = 'video-card';
+    function makeCard(video, compact = false) {
+        const card = document.createElement(compact ? 'button' : 'article');
+        card.className = compact ? 'history-item' : 'video-card';
         card.dataset.id = video.id;
+        if (compact) card.type = 'button';
+        else {
+            card.tabIndex = 0;
+            card.setAttribute('role', 'button');
+        }
         const badge = video.live
             ? '<span class="badge-live">LIVE</span>'
-            : `<span class="duration">${formatDuration(video.durationSec)}</span>`;
+            : `<span class="duration">${durationLabel(video.durationSec)}</span>`;
+        const watched = Number(progress[video.id]) || 0;
+        const percentage = video.durationSec ? Math.min(100, (watched / video.durationSec) * 100) : 0;
+        const progressBar = !compact && percentage > 0
+            ? `<div class="card-progress-bar" style="width:${percentage}%"></div>`
+            : '';
+        if (compact) {
+            card.innerHTML = `<img src="${escapeHtml(video.thumb)}" alt="" loading="lazy"><p class="history-title">${escapeHtml(video.title)}</p>`;
+            return card;
+        }
         card.innerHTML = `
             <div class="thumbnail-wrapper">
-                <img src="${video.thumb}" alt="${escapeHtml(video.title)} thumbnail" loading="lazy">
-                ${badge}
+                <img src="${escapeHtml(video.thumb)}" alt="${escapeHtml(video.title)} thumbnail" loading="lazy">
+                ${badge}${progressBar}
             </div>
             <div class="video-info">
                 <h3 class="video-title">${escapeHtml(video.title)}</h3>
-                <p class="video-meta">${escapeHtml(video.channel)} • ${escapeHtml(video.viewsText)} • ${escapeHtml(video.ageText)}</p>
+                <p class="video-meta">${escapeHtml(video.channel)} · ${escapeHtml(video.viewsText)} · ${escapeHtml(video.ageText)}</p>
             </div>`;
-        card.addEventListener('click', () => openWatch(video.id));
-        attachPreview(card, video);
         return card;
     }
 
-    async function renderGrid() {
+    function renderHistory() {
+        const row = $('historyRow');
+        const track = $('historyTrack');
+        if (!row || !track) return;
+        const history = readJSON(userKey('History'), []);
+        const recentVideos = history.map(getVideo).filter((video) => video && isVideoAllowed(video));
+        const visible = recentVideos.length > 0 && state.filter === 'all' && !state.query && !state.favoritesOnly;
+        row.hidden = !visible;
+        track.replaceChildren(...(visible ? recentVideos.map((video) => makeCard(video, true)) : []));
+    }
+
+    function renderGrid() {
+        if (!videoGrid) return;
         const list = getVisibleVideos();
-        if (videoGrid) videoGrid.innerHTML = '';
-        const frag = document.createDocumentFragment();
-        list.forEach((v) => frag.appendChild(buildCard(v)));
-        if (videoGrid) videoGrid.appendChild(frag);
-
-        if (emptyState) emptyState.hidden = list.length > 0;
-        if (list.length === 0 && emptyStateMsg) {
-            emptyStateMsg.textContent = state.query
-                ? `No videos match "${searchInput.value.trim()}".`
-                : 'No videos match the current filters.';
-        }
-
-        updateSectionTitle();
-        await renderHistory();
-        animateGridItems();
+        videoGrid.replaceChildren(...list.map((video) => makeCard(video)));
+        $('emptyState').hidden = list.length > 0;
+        const title = state.favoritesOnly
+            ? '❤️ Your Favorites'
+            : state.query
+                ? `Search Results for: "${searchInput.value.trim()}"`
+                : state.filter === 'all'
+                    ? 'Recommended Content'
+                    : state.filter.startsWith('tag:')
+                        ? `🏷️ #${state.filter.slice(4)}`
+                        : ({
+                            'live-18': '🔴 Live 18+ Streaming Feeds',
+                            universities: '🏛️ Universities Content',
+                            worldwide: '🌍 WorldWide Content',
+                            tiktokers: '🎵 TikTokers Content',
+                            trending: '🔥 Trending',
+                            newest: '✨ Latest Drops'
+                        })[state.filter] || 'Recommended Content';
+        if (sectionTitle) sectionTitle.textContent = title;
+        renderHistory();
+        updateActiveFilters();
     }
 
-    function getUserKey(key) {
-        const uid = currentUser ? currentUser.id : 'guest';
-        return `azigi${key}_${uid}`;
-    }
-
-    async function getHistoryAsync() {
-        let h = currentUser ? await loadWatchHistory(currentUser.id) : readJSON(getUserKey('History'), []);
-        h = h.filter((id) => {
-            const v = byId(id);
-            return v && isVideoAllowed(v);
+    function updateActiveFilters() {
+        document.querySelectorAll('.chip, .nav-item').forEach((item) => {
+            item.classList.toggle('active', !state.favoritesOnly && item.dataset.filter === state.filter);
         });
-        return h;
-    }
-
-    async function renderHistory() {
-        const ids = await getHistoryAsync();
-        const show = ids.length > 0 && state.filter === 'all' && !state.query;
-        if (historyRow) historyRow.hidden = !show;
-        if (!show) {
-            if (historyTrack) historyTrack.innerHTML = '';
-            return;
-        }
-        if (historyTrack) {
-            historyTrack.innerHTML = ids.map((id) => {
-                const v = byId(id);
-                return v ? `
-                <div class="history-item" data-id="${v.id}">
-                    <img src="${v.thumb}" alt="">
-                    <p class="history-title">${escapeHtml(v.title)}</p>
-                </div>` : '';
-            }).join('');
-        }
+        document.querySelectorAll('.sort-btn').forEach((item) => {
+            item.classList.toggle('active', item.dataset.sort === state.sort);
+        });
     }
 
     function renderTagCloud() {
+        const cloud = $('tagCloud');
+        if (!cloud) return;
         const tags = new Set();
-        VIDEOS.filter(isVideoAllowed).forEach((v) => {
-            v.tags.forEach((t) => {
-                if (t !== 'trending' && t !== 'newest') tags.add(t);
-            });
-        });
-        const sorted = [...tags].sort();
-        tagCloud.innerHTML = sorted
-            .map((t) => `<button type="button" class="tag-pill" data-filter="tag:${t}">#${t}</button>`)
-            .join('');
-        updateActiveTabVisualState(state.filter);
+        videos.filter(isVideoAllowed).forEach((video) => video.tags.forEach((tag) => {
+            if (tag !== 'trending' && tag !== 'newest') tags.add(tag);
+        }));
+        cloud.replaceChildren(...[...tags].sort().map((tag) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tag-pill';
+            button.dataset.filter = `tag:${tag}`;
+            button.textContent = `#${tag}`;
+            return button;
+        }));
     }
 
-    // ==========================================================
-    // 9. FILTER NAVIGATION
-    // ==========================================================
-    function setFilter(filterValue) {
-        state.filter = filterValue;
+    function renderSuggestions() {
+        const query = searchInput.value.trim().toLowerCase();
+        state.query = query;
+        if (!query) {
+            searchSuggest.hidden = true;
+            searchSuggest.replaceChildren();
+            renderGrid();
+            return;
+        }
+        const matches = videos.filter((video) => isVideoAllowed(video)
+            && `${video.title} ${video.channel} ${video.tags.join(' ')}`.toLowerCase().includes(query)).slice(0, 6);
+        searchSuggest.replaceChildren(...matches.map((video) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'suggest-item';
+            item.dataset.id = video.id;
+            item.textContent = `${video.title} · ${video.channel}`;
+            return item;
+        }));
+        searchSuggest.hidden = matches.length === 0;
+        suggestionIndex = -1;
+        renderGrid();
+    }
+
+    function setFilter(value) {
+        state.filter = value || 'all';
         state.favoritesOnly = false;
         state.query = '';
-        searchInput.value = '';
-        hideSuggest();
-        closeSidebar();
-        updateActiveTabVisualState(filterValue);
-        renderGrid();
-    }
-
-    function handleNavigationAttempt(element, filterValue) {
-        if (filterValue === 'live-18' && !isAdultVerified) {
-            pendingFilterTarget = element;
-            ageGateModal.classList.add('open');
-            return;
-        }
-        setFilter(filterValue);
-    }
-
-    function updateActiveTabVisualState(filterValue) {
-        filterChips.forEach((c) => {
-            c.classList.toggle('active', c.getAttribute('data-filter') === filterValue);
-        });
-        sidebarItems.forEach((i) => {
-            i.classList.toggle('active', i.getAttribute('data-filter') === filterValue);
-        });
-        document.querySelectorAll('.tag-pill').forEach((p) => {
-            p.classList.toggle('active', p.getAttribute('data-filter') === filterValue);
-        });
-    }
-
-    filterChips.forEach((chip) => {
-        chip.addEventListener('click', () => {
-            handleNavigationAttempt(chip, chip.getAttribute('data-filter'));
-        });
-    });
-
-    sidebarItems.forEach((item) => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleNavigationAttempt(item, item.getAttribute('data-filter'));
-        });
-    });
-
-    tagCloud.addEventListener('click', (e) => {
-        const pill = e.target.closest('.tag-pill');
-        if (!pill) return;
-        handleNavigationAttempt(pill, pill.getAttribute('data-filter'));
-    });
-
-    // ==========================================================
-    // 10. AGE GATE OVERLAY
-    // ==========================================================
-    if (ageGateAcceptBtn && ageGateRejectBtn) {
-        ageGateAcceptBtn.addEventListener('click', () => {
-            isAdultVerified = true;
-            localStorage.setItem('adultVerified', 'true');
-            ageGateModal.classList.remove('open');
-            renderTagCloud();
-
-            if (pendingFilterTarget) {
-                const filterValue = pendingFilterTarget.getAttribute('data-filter');
-                pendingFilterTarget = null;
-                setFilter(filterValue);
-            } else {
-                renderTagCloud();
-                renderGrid();
-            }
-        });
-
-        ageGateRejectBtn.addEventListener('click', () => {
-            ageGateModal.classList.remove('open');
-            pendingFilterTarget = null;
-            setFilter('all');
-        });
-    }
-
-    // ==========================================================
-    // 11. SEARCH & SUGGESTIONS
-    // ==========================================================
-    function hideSuggest() {
+        if (searchInput) searchInput.value = '';
         searchSuggest.hidden = true;
-        searchSuggest.innerHTML = '';
-    }
-
-    function showSuggest() {
-        const q = searchInput.value.trim().toLowerCase();
-        if (!q) {
-            hideSuggest();
-            return;
-        }
-        const matches = VIDEOS
-            .filter((v) => isVideoAllowed(v) && v.title.toLowerCase().includes(q))
-            .slice(0, 6);
-        if (matches.length === 0) {
-            hideSuggest();
-            return;
-        }
-        searchSuggest.innerHTML = matches
-            .map((v) => `<div class="suggest-item" data-id="${v.id}">🎬 ${escapeHtml(v.title)}</div>`)
-            .join('');
-        searchSuggest.hidden = false;
-    }
-
-    function runSearch(rawQuery) {
-        state.query = rawQuery.trim().toLowerCase();
-        state.favoritesOnly = false;
-        hideSuggest();
+        closeSidebar();
         renderGrid();
     }
 
-    if (searchBtn && searchInput) {
-        searchBtn.addEventListener('click', () => runSearch(searchInput.value));
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') runSearch(searchInput.value);
-        });
-        searchInput.addEventListener('input', showSuggest);
+    function closeSidebar() {
+        $('sidebarNav')?.classList.remove('open');
+        $('sidebarBackdrop')?.classList.remove('open');
+        $('menuToggleBtn')?.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
     }
 
-    searchSuggest.addEventListener('click', (e) => {
-        const item = e.target.closest('.suggest-item');
-        if (!item) return;
-        const v = byId(item.getAttribute('data-id'));
-        if (!v) return;
-        searchInput.value = v.title;
-        runSearch(v.title);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (searchSuggest.hidden) return;
-        if (!e.target.closest || !e.target.closest('.search-wrap')) hideSuggest();
-    });
-
-    // ==========================================================
-    // 12. SORT + DURATION
-    // ==========================================================
-    sortBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            state.sort = btn.getAttribute('data-sort');
-            sortBtns.forEach((b) => b.classList.toggle('active', b === btn));
-            renderGrid();
-        });
-    });
-
-    if (durationFilter) {
-        durationFilter.addEventListener('change', () => {
-            state.duration = durationFilter.value;
-            renderGrid();
-        });
+    function setTheme(light) {
+        document.body.classList.toggle('light-mode', light);
+        writeLocalValue('theme', light ? 'light' : 'dark');
+        const icon = document.querySelector('.theme-icon');
+        if (icon) icon.textContent = light ? '☀️' : '🌙';
     }
 
-    // ==========================================================
-    // 13. WATCH VIEW & INTERACTIONS
-    // ==========================================================
-    function getRatings() {
-        return userRatings;
+    function updateRatingButtons(video) {
+        const rating = ratings[video.id];
+        $('likeBtn').classList.toggle('active', rating === 'up');
+        $('dislikeBtn').classList.toggle('active', rating === 'down');
+        $('likeCount').textContent = video.likes.toLocaleString();
+        $('dislikeCount').textContent = video.dislikes.toLocaleString();
+        $('favoriteBtn').classList.toggle('active', favorites.includes(video.id));
+        $('favoriteBtn').textContent = favorites.includes(video.id) ? '❤️ Favorited' : '❤️ Favorite';
     }
 
-    function renderRatings(video) {
-        const r = getRatings()[video.id] || { up: 0, down: 0, mine: null };
-        likeCount.textContent = (video.likes || 0) + r.up;
-        dislikeCount.textContent = (video.dislikes || 0) + r.down;
-        likeBtn.classList.toggle('active', r.mine === 'up');
-        dislikeBtn.classList.toggle('active', r.mine === 'down');
-    }
-
-    async function toggleRating(dir) {
-        const v = byId(currentWatchId);
-        if (!v) return;
-        if (!currentUser) {
-            showToast('Please login to rate videos', 'warning');
-            const authModal = document.getElementById('authModal');
-            if (authModal) authModal.classList.add('open');
-            return;
-        }
-        const all = getRatings();
-        const previous = all[v.id] || { up: 0, down: 0, mine: null };
-        const next = { ...previous };
-        const removing = next.mine === dir;
-        if (next.mine === 'up') next.up -= 1;
-        if (next.mine === 'down') next.down -= 1;
-        next.mine = removing ? null : dir;
-        if (!removing && dir === 'up') next.up += 1;
-        if (!removing && dir === 'down') next.down += 1;
+    function validHttpUrl(value) {
         try {
-            if (window.supabaseClient) {
-                const result = removing
-                    ? await window.supabaseClient.from('ratings').delete().eq('user_id', currentUser.id).eq('video_id', v.id)
-                    : await window.supabaseClient.from('ratings').upsert({
-                        user_id: currentUser.id,
-                        video_id: v.id,
-                        rating: dir,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id,video_id' });
-                if (result.error) throw result.error;
+            const url = new URL(value);
+            return url.protocol === 'https:' || url.protocol === 'http:';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function getEmbedUrl(value) {
+        try {
+            const url = new URL(value);
+            const host = url.hostname.toLowerCase();
+            if (host === 'youtu.be' || host.endsWith('.youtu.be')) {
+                const id = url.pathname.split('/').filter(Boolean)[0];
+                return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : '';
+            }
+            if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
+                const id = url.searchParams.get('v') || url.pathname.match(/\/embed\/([^/]+)/)?.[1];
+                return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : '';
+            }
+            if (host === 'pornhub.com' || host.endsWith('.pornhub.com')) {
+                if (/^\/embed\/[\w-]+/.test(url.pathname)) return url.href;
+                const key = url.searchParams.get('viewkey');
+                return key ? `https://www.pornhub.com/embed/${encodeURIComponent(key)}` : '';
             }
         } catch (error) {
-            console.error('Failed to save rating:', error);
-            showToast(`Could not save your rating: ${getErrorMessage(error)}`, 'error');
-            return;
+            return '';
         }
-        all[v.id] = next;
-        userRatings = all;
-        writeJSON(getUserKey('Ratings'), all);
-        renderRatings(v);
-    }
-
-    if (likeBtn && dislikeBtn) {
-        likeBtn.addEventListener('click', async () => await toggleRating('up'));
-        dislikeBtn.addEventListener('click', async () => await toggleRating('down'));
-    }
-
-    function getLocalComments(videoId) {
-        const comments = readJSON(`azigiComments_${videoId}_${currentUser ? currentUser.id : 'guest'}`, []);
-        return Array.isArray(comments) ? comments : [];
-    }
-
-    function saveLocalComment(videoId, text) {
-        const comments = getLocalComments(videoId);
-        comments.push({
-            author: currentUser ? currentUser.email : 'You',
-            email: currentUser ? currentUser.email : '',
-            time: new Date().toLocaleString(),
-            text
-        });
-        writeJSON(`azigiComments_${videoId}_${currentUser ? currentUser.id : 'guest'}`, comments);
-    }
-
-    async function loadCommentsForVideo(videoId) {
-        const localComments = getLocalComments(videoId);
-        try {
-            if (!window.supabaseClient) return localComments;
-            const { data, error } = await window.supabaseClient
-                .from('comments')
-                .select('*')
-                .eq('video_id', videoId)
-                .order('created_at', { ascending: true });
-            if (error) throw error;
-            return [...localComments, ...(data || []).map(c => ({
-                id: c.id,
-                author: c.author_name || c.user_id,
-                email: c.author_name,
-                time: new Date(c.created_at).toLocaleString(),
-                text: c.comment_text
-            }))];
-        } catch (e) {
-            console.error('Failed to load comments:', e);
-            return localComments;
-        }
+        return '';
     }
 
     async function renderComments(video) {
-        const dbComments = await loadCommentsForVideo(video.id);
-        const seeded = (video.comments && Array.isArray(video.comments)) ? video.comments : [];
-        const all = [...seeded, ...dbComments];
-        commentCount.textContent = `(${all.length})`;
-        commentList.innerHTML = all.length
-            ? all.map((c) => {
-                const author = (currentUser && (c.email === currentUser.email || c.author === currentUser.email)) ? 'You' : (c.author || c.author_name);
-                return `
-            <li>
-                <div class="comment-head"><span class="comment-author">${escapeHtml(author)}</span><span class="comment-time">${escapeHtml(c.time || '')}</span></div>
-                <p>${escapeHtml(c.text || '')}</p>
-            </li>`;
-            }).join('')
-            : '<li class="comment-empty">No comments yet. Be the first!</li>';
-    }
-
-    function isFavorite(id) {
-        return userFavorites.includes(id);
-    }
-
-    async function toggleFavorite() {
-        const v = byId(currentWatchId);
-        if (!v) return;
-        if (!currentUser) {
-            showToast('Please login to manage favorites', 'warning');
-            const authModal = document.getElementById('authModal');
-            if (authModal) authModal.classList.add('open');
+        if (!commentList || !commentCount) return;
+        let comments = video.comments || [];
+        if (window.supabaseClient) {
+            const { data, error } = await window.supabaseClient
+                .from('comments').select('*').eq('video_id', video.id).order('created_at', { ascending: true });
+            if (error) {
+                console.warn('Could not load comments.', error);
+                showToast('Comments could not be loaded.', 'warning');
+            } else comments = data || [];
+        }
+        commentCount.textContent = `(${comments.length})`;
+        const parents = comments.filter((comment) => !comment.parent_id);
+        if (!parents.length) {
+            commentList.innerHTML = '<li class="comment-empty">No comments yet. Be the first!</li>';
             return;
         }
-        const idx = userFavorites.indexOf(v.id);
-        if (idx > -1) {
-            userFavorites.splice(idx, 1);
-            await removeFromFavorites(currentUser.id, v.id);
-            showToast('Removed from favorites', 'info');
-        } else {
-            userFavorites.push(v.id);
-            await addToFavorites(currentUser.id, v.id);
-            showToast('Added to favorites', 'success');
-        }
-        renderFavoriteBtn(v);
-        if (state.favoritesOnly) renderGrid();
-    }
-
-    function renderFavoriteBtn(video) {
-        const favBtn = document.getElementById('favoriteBtn');
-        if (!favBtn) return;
-        const fav = isFavorite(video.id);
-        favBtn.textContent = fav ? '❤️ Favorited' : '❤️ Favorite';
-        favBtn.classList.toggle('active', fav);
-    }
-
-    const favoriteBtn = document.getElementById('favoriteBtn');
-    if (favoriteBtn) favoriteBtn.addEventListener('click', toggleFavorite);
-
-    async function recordHistory(videoId) {
-        let h = currentUser ? await loadWatchHistory(currentUser.id) : readJSON(getUserKey('History'), []);
-        h = h.filter(id => id !== videoId);
-        h.unshift(videoId);
-        if (h.length > 20) h.pop();
-
-        if (currentUser && window.supabaseClient) {
-            try {
-                await window.supabaseClient.from('watch_history').upsert({
-                    user_id: currentUser.id,
-                    video_id: videoId,
-                    watched_at: new Date().toISOString()
-                }, { onConflict: 'user_id,video_id' });
-            } catch (e) {}
-        } else {
-            writeJSON(getUserKey('History'), h);
-        }
-        renderHistory();
+        commentList.innerHTML = parents.map((comment) => {
+            const replies = comments.filter((reply) => reply.parent_id === comment.id);
+            const author = currentUser?.id === comment.user_id ? 'You' : (comment.author_name || comment.author || 'User');
+            const timestamp = comment.created_at ? new Date(comment.created_at).toLocaleString() : (comment.time || '');
+            return `<li class="comment-item" data-id="${escapeHtml(comment.id)}">
+                <div class="comment-head"><span class="comment-author">${escapeHtml(author)}</span><span class="comment-time">${escapeHtml(timestamp)}</span></div>
+                <p class="comment-text">${escapeHtml(comment.comment_text || comment.text)}</p>
+                <div class="comment-actions"><button type="button" class="comment-reply-trigger">Reply</button></div>
+                <ul class="reply-list">${replies.map((reply) => `<li class="reply-item"><div class="comment-head"><span class="comment-author">${escapeHtml(reply.author_name || 'User')}</span></div><p class="comment-text">${escapeHtml(reply.comment_text)}</p></li>`).join('')}</ul>
+                <form class="reply-form" data-parent-id="${escapeHtml(comment.id)}" hidden><input type="text" maxlength="300" placeholder="Write reply..." required><button type="submit">Post</button></form>
+            </li>`;
+        }).join('');
     }
 
     async function openWatch(id) {
-        const v = byId(id);
-        if (!v) return;
-        currentWatchId = v.id;
-
-        modalVideoTitle.textContent = v.title;
-        modalVideoMeta.textContent = `${v.channel} • ${v.viewsText} • ${v.ageText}`;
-        watchViews.textContent = v.viewsText;
-
-        if (watchPlayer) {
-            const streamSrc = getPlayableSource(v.src);
-            if (playerFallback) playerFallback.hidden = true;
-            watchPlayer.onerror = () => {
-                if (playerFallback) playerFallback.hidden = false;
+        const video = getVideo(id);
+        if (!video || !isVideoAllowed(video)) return;
+        currentWatchId = video.id;
+        $('modalVideoTitle').textContent = video.title;
+        $('modalVideoMeta').textContent = `${video.channel} · ${video.viewsText} · ${video.ageText}`;
+        $('watchViews').textContent = video.viewsText;
+        $('watchLive').hidden = !video.live;
+        playerFallback.hidden = true;
+        const embedUrl = getEmbedUrl(video.src);
+        if (embedUrl) {
+            watchPlayer.pause();
+            watchPlayer.removeAttribute('src');
+            watchPlayer.hidden = true;
+            watchIframe.src = embedUrl;
+            watchIframe.style.display = 'block';
+        } else if (validHttpUrl(video.src)) {
+            watchIframe.src = '';
+            watchIframe.style.display = 'none';
+            watchPlayer.hidden = false;
+            watchPlayer.src = video.src;
+            watchPlayer.onloadedmetadata = () => {
+                const savedProgress = Number(progress[video.id]) || 0;
+                if (savedProgress > 5 && savedProgress < watchPlayer.duration - 3) watchPlayer.currentTime = savedProgress - 3;
             };
-            watchPlayer.src = streamSrc;
             watchPlayer.load();
-
-            watchPlayer.play().catch(() => {
-                console.log('Autoplay blocked or stream requires user interaction.');
-            });
+            watchPlayer.play().catch(() => {});
+        } else {
+            watchIframe.src = '';
+            watchIframe.style.display = 'none';
+            watchPlayer.hidden = true;
+            playerFallback.hidden = false;
         }
-
-        watchLive.hidden = !v.live;
-        renderRatings(v);
-        renderFavoriteBtn(v);
-        await renderComments(v);
-
-        const related = VIDEOS.filter(item => item.id !== v.id && isVideoAllowed(item)).slice(0, 5);
-        relatedList.innerHTML = related.map(item => `
-            <div class="related-item" data-id="${item.id}">
-                <div class="related-thumb">
-                    <img src="${item.thumb}" alt="">
-                    <span class="related-dur">${formatDuration(item.durationSec)}</span>
-                </div>
-                <div>
-                    <p class="related-title">${escapeHtml(item.title)}</p>
-                    <p class="related-meta">${escapeHtml(item.channel)}</p>
-                </div>
-            </div>
-        `).join('');
-
-        videoModal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        await recordHistory(v.id);
+        openModal(videoModal);
+        await renderComments(video);
+        video.views += 1;
+        video.viewsText = `${video.views.toLocaleString()} views`;
+        $('watchViews').textContent = video.viewsText;
+        $('modalVideoMeta').textContent = `${video.channel} · ${video.viewsText} · ${video.ageText}`;
+        updateRatingButtons(video);
+        const history = readJSON(userKey('History'), []).filter((videoId) => videoId !== video.id);
+        history.unshift(video.id);
+        writeJSON(userKey('History'), history.slice(0, 20));
+        if (window.supabaseClient) {
+            const { data, error } = await window.supabaseClient.rpc('increment_video_views', { video_id_input: video.id });
+            if (error) console.warn('Could not update video views.', error);
+            else if (Number.isFinite(Number(data))) {
+                video.views = Number(data);
+                video.viewsText = `${video.views.toLocaleString()} views`;
+                $('watchViews').textContent = video.viewsText;
+                $('modalVideoMeta').textContent = `${video.channel} · ${video.viewsText} · ${video.ageText}`;
+            }
+        }
+        renderGrid();
     }
 
     function closeWatch() {
-        if (watchPlayer) {
-            watchPlayer.pause();
-            watchPlayer.src = '';
+        watchPlayer.pause();
+        watchPlayer.removeAttribute('src');
+        watchPlayer.load();
+        watchIframe.src = '';
+        if (currentWatchId && window.supabaseClient && currentUser) {
+            const currentProgress = Number(progress[currentWatchId]) || 0;
+            window.supabaseClient.from('video_progress').upsert({
+                user_id: currentUser.id,
+                video_id: currentWatchId,
+                progress_sec: currentProgress,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id,video_id' }).then(({ error }) => {
+                if (error) console.warn('Could not save watch progress.', error);
+            });
         }
-        videoModal.classList.remove('open');
-        document.body.style.overflow = '';
         currentWatchId = null;
+        closeModal(videoModal);
+        renderGrid();
     }
 
-    if (closeModal) closeModal.addEventListener('click', closeWatch);
-    videoModal.addEventListener('click', (e) => {
-        if (e.target === videoModal) closeWatch();
-    });
+    async function addFavorite(video) {
+        if (!currentUser) {
+            showToast('Sign in to save favorites.', 'warning');
+            openModal(authModal);
+            return;
+        }
+        const isFavorite = favorites.includes(video.id);
+        const result = isFavorite
+            ? await window.supabaseClient?.from('favorites').delete().eq('user_id', currentUser.id).eq('video_id', video.id)
+            : await window.supabaseClient?.from('favorites').upsert({ user_id: currentUser.id, video_id: video.id }, { onConflict: 'user_id,video_id' });
+        if (result?.error) {
+            showToast('Could not update favorites. Please try again.', 'error');
+            console.error('Favorite update failed.', result.error);
+            return;
+        }
+        favorites = isFavorite ? favorites.filter((id) => id !== video.id) : [...favorites, video.id];
+        writeJSON(userKey('Favorites'), favorites);
+        updateRatingButtons(video);
+        renderGrid();
+    }
 
-    relatedList.addEventListener('click', (e) => {
-        const item = e.target.closest('.related-item');
-        if (!item) return;
-        openWatch(item.getAttribute('data-id'));
-    });
-
-    if (commentForm) {
-        commentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = commentInput.value.trim();
-            if (!text || !currentWatchId) return;
-            if (!currentUser) {
-                showToast('Please sign in to post comments', 'warning');
-                const authModal = document.getElementById('authModal');
-                if (authModal) authModal.classList.add('open');
+    async function saveRating(video, rating) {
+        if (!currentUser) {
+            showToast('Sign in to rate videos.', 'warning');
+            openModal(authModal);
+            return;
+        }
+        const previous = ratings[video.id];
+        if (previous === rating) return;
+        if (window.supabaseClient) {
+            const { data, error } = await window.supabaseClient.rpc('rate_video', {
+                video_id_input: video.id,
+                rating_input: rating
+            });
+            if (error) {
+                showToast('Could not save your rating.', 'error');
+                console.error('Rating update failed.', error);
                 return;
             }
-
-            try {
-                let savedLocally = !window.supabaseClient;
-                if (window.supabaseClient) {
-                    const { error } = await window.supabaseClient.from('comments').insert({
-                        video_id: currentWatchId,
-                        user_id: currentUser.id,
-                        author_name: currentUser.email,
-                        comment_text: text
-                    });
-                    if (error && error.code !== 'PGRST205') throw error;
-                    savedLocally = !!error;
-                }
-                if (savedLocally) saveLocalComment(currentWatchId, text);
-                commentInput.value = '';
-                const v = byId(currentWatchId);
-                await renderComments(v);
-                showToast(
-                    savedLocally
-                        ? 'Comment saved on this device only; the comments table is unavailable.'
-                        : 'Comment posted successfully',
-                    savedLocally ? 'warning' : 'success'
-                );
-            } catch (err) {
-                console.error('Failed to post comment:', err);
-                showToast(`Failed to post comment: ${getErrorMessage(err)}`, 'error');
-            }
-        });
+            video.likes = Number(data?.likes) || 0;
+            video.dislikes = Number(data?.dislikes) || 0;
+        } else {
+            if (previous === 'up') video.likes = Math.max(0, video.likes - 1);
+            if (previous === 'down') video.dislikes = Math.max(0, video.dislikes - 1);
+            if (rating === 'up') video.likes += 1;
+            else video.dislikes += 1;
+        }
+        ratings[video.id] = rating;
+        writeJSON(userKey('Ratings'), ratings);
+        updateRatingButtons(video);
     }
 
-    if (menuToggleBtn && sidebarNav && sidebarBackdrop) {
-        menuToggleBtn.addEventListener('click', () => {
-            const isOpen = sidebarNav.classList.toggle('open');
-            sidebarBackdrop.classList.toggle('open', isOpen);
-            menuToggleBtn.setAttribute('aria-expanded', String(isOpen));
-        });
-        sidebarBackdrop.addEventListener('click', closeSidebar);
+    function switchAuthTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+        $('loginForm').hidden = tab !== 'login';
+        $('signupForm').hidden = tab !== 'signup';
     }
 
-    if (profilePic && dropdownMenu) {
-        profilePic.setAttribute('role', 'button');
-        profilePic.setAttribute('tabindex', '0');
-        profilePic.setAttribute('aria-haspopup', 'true');
-        profilePic.setAttribute('aria-expanded', 'false');
-        const toggleUserMenu = () => {
-            dropdownMenu.hidden = !dropdownMenu.hidden;
-            profilePic.setAttribute('aria-expanded', String(!dropdownMenu.hidden));
-        };
-        profilePic.addEventListener('click', toggleUserMenu);
-        profilePic.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleUserMenu();
-            }
-        });
+    function setFormError(id, message) {
+        const field = $(id);
+        const error = $(`${id}Error`);
+        if (error) error.textContent = message;
+        field?.setAttribute('aria-invalid', message ? 'true' : 'false');
     }
 
-    document.addEventListener('click', (e) => {
-        if (userDropdown && !userDropdown.contains(e.target)) closeUserMenu();
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        closeSidebar();
-        closeUserMenu();
-        if (videoModal && videoModal.classList.contains('open')) closeWatch();
-        document.querySelectorAll('.auth-modal.open').forEach((modal) => modal.classList.remove('open'));
-        if (ageGateModal) ageGateModal.classList.remove('open');
-    });
-
-    const loginBtn = document.getElementById('loginBtn');
-    const authModal = document.getElementById('authModal');
-    const closeAuthModal = document.getElementById('closeAuthModal');
-    const authTabs = document.querySelectorAll('.auth-tab');
-    const loginForm = document.getElementById('loginFormEl');
-    const signupForm = document.getElementById('signupFormEl');
-    const switchToSignupLink = document.getElementById('switchToSignupLink');
-
-    function showAuthTab(tab) {
-        document.getElementById('loginForm').hidden = tab !== 'login';
-        document.getElementById('signupForm').hidden = tab !== 'signup';
-        authTabs.forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
-    }
-
-    function setAuthError(id, message) {
-        const target = document.getElementById(id);
-        if (target) target.textContent = message || '';
-    }
-
-    function getErrorMessage(error) {
-        return error && error.message ? error.message : 'Please try again.';
-    }
-
-    if (loginBtn && authModal) loginBtn.addEventListener('click', () => authModal.classList.add('open'));
-    if (closeAuthModal && authModal) closeAuthModal.addEventListener('click', () => authModal.classList.remove('open'));
-    if (authModal) {
-        authModal.addEventListener('click', (e) => {
-            if (e.target === authModal) authModal.classList.remove('open');
-        });
-    }
-    authTabs.forEach((button) => button.addEventListener('click', () => showAuthTab(button.dataset.tab)));
-    if (switchToSignupLink) {
-        switchToSignupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showAuthTab('signup');
-        });
-    }
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            setAuthError('loginEmailError', '');
-            setAuthError('loginPasswordError', '');
-            try {
-                if (!window.supabaseLogin) throw new Error('Sign-in is unavailable because the authentication service is not configured.');
-                const { user } = await window.supabaseLogin(email, password);
-                if (!user) throw new Error('Sign-in succeeded without a user session. Please try again.');
+    async function submitAuth(form, mode) {
+        const email = $(mode === 'login' ? 'loginEmail' : 'signupEmail').value.trim();
+        const password = $(mode === 'login' ? 'loginPassword' : 'signupPassword').value;
+        if (!window.supabaseClient) {
+            showToast('Account sign-in is unavailable until Supabase is configured.', 'error');
+            return null;
+        }
+        try {
+            const result = mode === 'login'
+                ? await window.supabaseLogin(email, password)
+                : await window.supabaseSignup(email, password);
+            const user = result.user || result.session?.user;
+            if (user) {
                 await setCurrentUser({
                     id: user.id,
                     email: user.email,
-                    name: user.user_metadata && user.user_metadata.full_name
-                        ? user.user_metadata.full_name
-                        : user.email.split('@')[0]
+                    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
                 });
-                authModal.classList.remove('open');
-                loginForm.reset();
-                showToast('Signed in successfully.', 'success');
-            } catch (error) {
-                setAuthError('loginPasswordError', getErrorMessage(error));
+                closeModal(authModal);
+                showToast(mode === 'login' ? 'Signed in successfully.' : 'Account created successfully.', 'success');
+            } else {
+                showToast('Check your email to confirm your account, then sign in.', 'info');
             }
-        });
+            form.reset();
+            return user;
+        } catch (error) {
+            showToast(error.message || 'Authentication failed. Please try again.', 'error');
+            return null;
+        }
     }
 
-    if (signupForm) {
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirm').value;
-            setAuthError('signupEmailError', '');
-            setAuthError('signupPasswordError', '');
-            setAuthError('signupConfirmError', '');
-            if (password.length < 6) {
-                setAuthError('signupPasswordError', 'Use at least 6 characters.');
-                return;
-            }
-            if (password !== confirmPassword) {
-                setAuthError('signupConfirmError', 'Passwords do not match.');
-                return;
-            }
-            try {
-                if (!window.supabaseSignup) throw new Error('Registration is unavailable because the authentication service is not configured.');
-                const { user, session } = await window.supabaseSignup(email, password);
-                if (session && user) {
-                    await setCurrentUser({
-                        id: user.id,
-                        email: user.email,
-                        name: user.user_metadata && user.user_metadata.full_name
-                            ? user.user_metadata.full_name
-                            : user.email.split('@')[0]
-                    });
-                    authModal.classList.remove('open');
-                    showToast('Account created successfully.', 'success');
-                } else {
-                    showToast('Check your email to confirm your account, then sign in.', 'info');
-                    showAuthTab('login');
-                }
-                signupForm.reset();
-            } catch (error) {
-                setAuthError('signupEmailError', getErrorMessage(error));
-            }
-        });
+    async function submitComment(form, parentId = null) {
+        const input = form.querySelector('input');
+        const text = input.value.trim();
+        if (!text || !currentWatchId) return;
+        if (!currentUser) {
+            showToast('Sign in to join the discussion.', 'warning');
+            openModal(authModal);
+            return;
+        }
+        if (!window.supabaseClient) {
+            showToast('Posting comments requires a configured account connection.', 'error');
+            return;
+        }
+        const comment = {
+            video_id: currentWatchId,
+            user_id: currentUser.id,
+            author_name: currentUser.email,
+            comment_text: text
+        };
+        if (parentId) comment.parent_id = parentId;
+        const { error } = await window.supabaseClient.from('comments').insert(comment);
+        if (error) {
+            showToast('Could not post your comment.', 'error');
+            console.error('Comment submission failed.', error);
+            return;
+        }
+        form.reset();
+        await renderComments(getVideo(currentWatchId));
+        showToast('Comment posted.', 'success');
     }
 
-    const profileLink = document.getElementById('profileLink');
-    const favoritesLink = document.getElementById('favoritesLink');
-    const historyLink = document.getElementById('historyLink');
-    const logoutLink = document.getElementById('logoutLink');
-    if (profileLink) {
-        profileLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            closeUserMenu();
-            showToast(`Signed in as ${currentUser ? currentUser.email : 'guest'}.`, 'info');
-        });
-    }
-    if (favoritesLink) {
-        favoritesLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            closeUserMenu();
-            if (!currentUser) {
-                showToast('Please sign in to view your favorites.', 'warning');
-                if (authModal) authModal.classList.add('open');
-                return;
+    async function verifyCreator(email, password) {
+        if (!window.supabaseClient) {
+            showToast('Creator Studio requires a configured Supabase connection.', 'error');
+            return;
+        }
+        try {
+            const data = await window.supabaseLogin(email, password);
+            const user = data.user || data.session?.user;
+            if (!user) throw new Error('Sign-in did not return an account.');
+            currentUser = { id: user.id, email: user.email, name: user.user_metadata?.full_name || user.email.split('@')[0] };
+            await loadUserData();
+            if (userProfile?.role !== 'admin') {
+                await window.supabaseLogout();
+                currentUser = null;
+                updateAuthUI();
+                throw new Error('This account is not authorized to use Creator Studio.');
             }
+            writeJSON('azigiCurrentUser', currentUser);
+            updateAuthUI();
+            $('adminLoginSection').hidden = true;
+            $('adminDashboardSection').hidden = false;
+        } catch (error) {
+            showToast(error.message || 'Creator authentication failed.', 'error');
+        }
+    }
+
+    async function publishVideo(event) {
+        event.preventDefault();
+        if (!currentUser || userProfile?.role !== 'admin' || !window.supabaseClient) {
+            showToast('Sign in with an administrator account before publishing.', 'error');
+            return;
+        }
+        const title = $('uploadTitle').value.trim();
+        const channel = $('uploadChannel').value.trim();
+        const videoUrl = $('uploadVideoUrl').value.trim();
+        const thumb = $('uploadThumbUrl').value.trim();
+        if (!title || !channel || !validHttpUrl(videoUrl) || (thumb && !validHttpUrl(thumb))) {
+            showToast('Enter a title, creator, and valid HTTP(S) media URLs.', 'warning');
+            return;
+        }
+        const minutes = Number($('uploadMinutes').value) || 0;
+        const seconds = Number($('uploadSeconds').value) || 0;
+        if (seconds > 59 || minutes < 0 || seconds < 0) {
+            showToast('Enter a valid duration.', 'warning');
+            return;
+        }
+        const isLive = $('uploadCategory').value === 'live-18';
+        const id = window.crypto?.randomUUID
+            ? `video-${window.crypto.randomUUID()}`
+            : `video-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const video = {
+            id,
+            title,
+            channel,
+            category: $('uploadCategory').value,
+            tags: $('uploadTags').value.split(',').map((tag) => tag.trim().toLowerCase()).filter(Boolean),
+            duration_sec: isLive ? 0 : minutes * 60 + seconds,
+            live: isLive,
+            views: 0,
+            views_text: '0 views',
+            age_text: 'just now',
+            days_ago: 0,
+            video_url: videoUrl,
+            thumb_url: thumb || null,
+            likes: 0,
+            dislikes: 0
+        };
+        const button = $('uploadSubmitBtn');
+        button.disabled = true;
+        try {
+            const { error } = await window.supabaseClient.from('videos').insert(video);
+            if (error) throw error;
+            $('uploadForm').reset();
+            closeModal(adminModal);
+            await loadVideos();
+            renderTagCloud();
+            renderGrid();
+            showToast('Video published.', 'success');
+        } catch (error) {
+            showToast(error.message || 'Could not publish video.', 'error');
+            console.error('Video publishing failed.', error);
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function wireEvents() {
+        $('themeToggleBtn')?.addEventListener('click', () => setTheme(!document.body.classList.contains('light-mode')));
+        setTheme(readLocalValue('theme') === 'light');
+
+        searchInput?.addEventListener('input', renderSuggestions);
+        searchInput?.addEventListener('keydown', (event) => {
+            const suggestions = [...searchSuggest.querySelectorAll('.suggest-item')];
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                if (suggestions.length === 0) return;
+                event.preventDefault();
+                suggestionIndex = (suggestionIndex + (event.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length;
+                suggestions.forEach((item, index) => item.classList.toggle('active', index === suggestionIndex));
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                const selected = suggestions[suggestionIndex];
+                if (selected) openWatch(selected.dataset.id);
+                else renderSuggestions();
+                searchSuggest.hidden = true;
+            } else if (event.key === 'Escape') searchSuggest.hidden = true;
+        });
+        $('searchBtn')?.addEventListener('click', () => {
+            renderSuggestions();
+            searchSuggest.hidden = true;
+            searchInput?.focus();
+        });
+        searchSuggest?.addEventListener('click', (event) => {
+            const item = event.target.closest('.suggest-item');
+            if (item) {
+                searchSuggest.hidden = true;
+                openWatch(item.dataset.id);
+            }
+        });
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.search-wrap')) searchSuggest.hidden = true;
+        });
+
+        document.querySelectorAll('.chip, .nav-item').forEach((item) => item.addEventListener('click', (event) => {
+            event.preventDefault();
+            setFilter(item.dataset.filter);
+        }));
+        $('tagCloud')?.addEventListener('click', (event) => {
+            const item = event.target.closest('.tag-pill');
+            if (item) setFilter(item.dataset.filter);
+        });
+        document.querySelectorAll('.sort-btn').forEach((button) => button.addEventListener('click', () => {
+            state.sort = button.dataset.sort;
+            renderGrid();
+        }));
+        durationFilter?.addEventListener('change', () => {
+            state.duration = durationFilter.value;
+            renderGrid();
+        });
+        videoGrid?.addEventListener('click', (event) => {
+            const card = event.target.closest('[data-id]');
+            if (card) openWatch(card.dataset.id);
+        });
+        $('historyTrack')?.addEventListener('click', (event) => {
+            const item = event.target.closest('[data-id]');
+            if (item) openWatch(item.dataset.id);
+        });
+        $('clearHistoryBtn')?.addEventListener('click', () => {
+            try { localStorage.removeItem(userKey('History')); } catch (error) { console.warn('Unable to clear watch history.', error); }
+            renderHistory();
+        });
+
+        $('menuToggleBtn')?.addEventListener('click', () => {
+            const isOpen = $('sidebarNav').classList.toggle('open');
+            $('sidebarBackdrop').classList.toggle('open', isOpen);
+            $('menuToggleBtn').setAttribute('aria-expanded', String(isOpen));
+            document.body.classList.toggle('menu-open', isOpen);
+        });
+        $('sidebarBackdrop')?.addEventListener('click', closeSidebar);
+        $('videoGrid')?.addEventListener('keydown', (event) => {
+            if ((event.key === 'Enter' || event.key === ' ') && event.target.classList.contains('video-card')) {
+                event.preventDefault();
+                openWatch(event.target.dataset.id);
+            }
+        });
+
+        $('closeModal')?.addEventListener('click', closeWatch);
+        videoModal?.addEventListener('click', (event) => { if (event.target === videoModal) closeWatch(); });
+        watchPlayer?.addEventListener('error', () => { playerFallback.hidden = false; });
+        watchPlayer?.addEventListener('timeupdate', () => {
+            if (!currentWatchId || watchPlayer.currentTime < 1) return;
+            progress[currentWatchId] = Math.floor(watchPlayer.currentTime);
+            writeJSON(userKey('Progress'), progress);
+        });
+        $('likeBtn')?.addEventListener('click', () => {
+            const video = getVideo(currentWatchId);
+            if (video) saveRating(video, 'up');
+        });
+        $('dislikeBtn')?.addEventListener('click', () => {
+            const video = getVideo(currentWatchId);
+            if (video) saveRating(video, 'down');
+        });
+        $('favoriteBtn')?.addEventListener('click', () => {
+            const video = getVideo(currentWatchId);
+            if (video) addFavorite(video);
+        });
+        commentList?.addEventListener('click', (event) => {
+            const reply = event.target.closest('.comment-reply-trigger');
+            if (reply) {
+                const form = reply.closest('.comment-item').querySelector('.reply-form');
+                form.hidden = !form.hidden;
+            }
+        });
+        commentList?.addEventListener('submit', (event) => {
+            const form = event.target.closest('.reply-form');
+            if (form) {
+                event.preventDefault();
+                submitComment(form, form.dataset.parentId);
+            }
+        });
+        $('commentForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitComment(event.currentTarget);
+        });
+
+        $('loginBtn')?.addEventListener('click', () => openModal(authModal));
+        $('closeAuthModal')?.addEventListener('click', () => closeModal(authModal));
+        authModal?.addEventListener('click', (event) => { if (event.target === authModal) closeModal(authModal); });
+        document.querySelectorAll('.auth-tab').forEach((button) => button.addEventListener('click', () => switchAuthTab(button.dataset.tab)));
+        $('switchToSignupLink')?.addEventListener('click', (event) => { event.preventDefault(); switchAuthTab('signup'); });
+        $('loginFormEl')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            setFormError('loginEmail', '');
+            setFormError('loginPassword', '');
+            if (!event.currentTarget.reportValidity()) return;
+            submitAuth(event.currentTarget, 'login');
+        });
+        $('signupFormEl')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const password = $('signupPassword').value;
+            setFormError('signupConfirm', $('signupConfirm').value === password ? '' : 'Passwords do not match.');
+            if (!event.currentTarget.reportValidity() || $('signupConfirm').value !== password) return;
+            submitAuth(event.currentTarget, 'signup');
+        });
+        $('profilePic')?.addEventListener('click', () => {
+            const menu = $('dropdownMenu');
+            menu.hidden = !menu.hidden;
+        });
+        $('favoritesLink')?.addEventListener('click', (event) => {
+            event.preventDefault();
             state.favoritesOnly = true;
             state.query = '';
             searchInput.value = '';
-            hideSuggest();
+            $('dropdownMenu').hidden = true;
             renderGrid();
         });
-    }
-    if (historyLink) {
-        historyLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            closeUserMenu();
+        $('historyLink')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            $('dropdownMenu').hidden = true;
             state.filter = 'all';
-            state.query = '';
             state.favoritesOnly = false;
+            state.query = '';
             searchInput.value = '';
-            hideSuggest();
-            await renderGrid();
-            if (historyRow && !historyRow.hidden) {
-                historyRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                showToast('Your watch history is empty.', 'info');
-            }
+            renderGrid();
+            $('historyRow').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
         });
-    }
-    if (logoutLink) {
-        logoutLink.addEventListener('click', async (e) => {
-            e.preventDefault();
+        $('profileLink')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            $('dropdownMenu').hidden = true;
+            showToast(currentUser?.email || '', 'info');
+        });
+        $('logoutLink')?.addEventListener('click', async (event) => {
+            event.preventDefault();
             try {
                 if (window.supabaseClient) await window.supabaseLogout();
                 await setCurrentUser(null);
-                closeUserMenu();
-                showToast('You have been signed out.', 'success');
+                showToast('Signed out.', 'success');
             } catch (error) {
-                showToast(`Could not sign out: ${getErrorMessage(error)}`, 'error');
+                showToast(error.message || 'Could not sign out.', 'error');
             }
         });
-    }
 
-    if (historyTrack) {
-        historyTrack.addEventListener('click', (e) => {
-            const item = e.target.closest('.history-item');
-            if (item) openWatch(item.dataset.id);
+        $('ageGateAcceptBtn')?.addEventListener('click', () => {
+            writeLocalValue('adultVerified', 'true');
+            closeModal(ageGateModal);
+            renderTagCloud();
+            renderGrid();
         });
-    }
-    if (clearHistoryBtn) {
-        clearHistoryBtn.addEventListener('click', async () => {
+        $('ageGateRejectBtn')?.addEventListener('click', () => window.location.replace('about:blank'));
+        if (readLocalValue('adultVerified') !== 'true') openModal(ageGateModal);
+
+        $('secretLogoTrigger')?.addEventListener('click', () => {
+            const logo = $('secretLogoTrigger');
+            const now = Date.now();
+            const previous = Number(logo.dataset.lastClick) || 0;
+            const count = now - previous > 1500 ? 1 : (Number(logo.dataset.clickCount) || 0) + 1;
+            logo.dataset.clickCount = String(count);
+            logo.dataset.lastClick = String(now);
+            if (count >= 5) {
+                logo.dataset.clickCount = '0';
+                $('adminLoginSection').hidden = false;
+                $('adminDashboardSection').hidden = true;
+                openModal(adminModal);
+            }
+        });
+        $('closeAdminModal')?.addEventListener('click', () => closeModal(adminModal));
+        adminModal?.addEventListener('click', (event) => { if (event.target === adminModal) closeModal(adminModal); });
+        $('adminLoginForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (event.currentTarget.reportValidity()) verifyCreator($('adminEmail').value.trim(), $('adminPassword').value);
+        });
+        $('adminLogoutBtn')?.addEventListener('click', async () => {
             try {
-                if (currentUser && window.supabaseClient) {
-                    const { error } = await window.supabaseClient
-                        .from('watch_history')
-                        .delete()
-                        .eq('user_id', currentUser.id);
-                    if (error) throw error;
-                } else {
-                    writeJSON(getUserKey('History'), []);
-                }
-                await renderHistory();
-                showToast('Watch history cleared.', 'success');
+                await window.supabaseLogout();
+                await setCurrentUser(null);
+                $('adminLoginSection').hidden = false;
+                $('adminDashboardSection').hidden = true;
+                closeModal(adminModal);
             } catch (error) {
-                console.error('Failed to clear watch history:', error);
-                showToast(`Could not clear watch history: ${getErrorMessage(error)}`, 'error');
+                showToast(error.message || 'Could not lock Creator Studio.', 'error');
             }
         });
+        $('uploadForm')?.addEventListener('submit', publishVideo);
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            if (videoModal?.classList.contains('open')) closeWatch();
+            closeModal(authModal);
+            closeModal(adminModal);
+            searchSuggest.hidden = true;
+            closeSidebar();
+        });
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.user-dropdown')) $('dropdownMenu').hidden = true;
+        });
+        window.addEventListener('supabase:authenticated', (event) => {
+            const user = event.detail;
+            setCurrentUser(user);
+        });
+        window.addEventListener('supabase:loggedOut', () => setCurrentUser(null));
     }
 
-    const adminModal = document.getElementById('adminModal');
-    const closeAdminModal = document.getElementById('closeAdminModal');
-    const adminLoginForm = document.getElementById('adminLoginForm');
-    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
-    const adminLoginSection = document.getElementById('adminLoginSection');
-    const adminDashboardSection = document.getElementById('adminDashboardSection');
-    const uploadForm = document.getElementById('uploadForm');
-
-    if (closeAdminModal && adminModal) closeAdminModal.addEventListener('click', () => adminModal.classList.remove('open'));
-    if (adminModal) {
-        adminModal.addEventListener('click', (e) => {
-            if (e.target === adminModal) adminModal.classList.remove('open');
-        });
-    }
-    if (adminLogoutBtn) {
-        adminLogoutBtn.addEventListener('click', () => {
-            if (adminLoginSection) adminLoginSection.hidden = false;
-            if (adminDashboardSection) adminDashboardSection.hidden = true;
-            if (adminModal) adminModal.classList.remove('open');
-        });
-    }
-    if (adminLoginForm) {
-        adminLoginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
-            try {
-                if (!window.supabaseLogin) throw new Error('Creator sign-in is unavailable because authentication is not configured.');
-                const { user } = await window.supabaseLogin(email, password);
-                if (!user) throw new Error('Authentication returned no user.');
-                const profile = await loadUserProfile(user.id);
-                if (!profile) {
-                    await window.supabaseLogout();
-                    await setCurrentUser(null);
-                    throw new Error('Your account has no profile row yet. Run the Creator Studio admin setup SQL in Supabase, then sign in again.');
-                }
-                if (profile.role !== 'admin') {
-                    await window.supabaseLogout();
-                    await setCurrentUser(null);
-                    throw new Error('This account is not marked as an admin. Run the Creator Studio admin setup SQL in Supabase, then sign in again.');
-                }
-                await setCurrentUser({
-                    id: user.id,
-                    email: user.email,
-                    name: profile.full_name || user.email.split('@')[0]
-                });
-                userProfile = profile;
-                if (adminLoginSection) adminLoginSection.hidden = true;
-                if (adminDashboardSection) adminDashboardSection.hidden = false;
-                showToast('Creator Studio unlocked.', 'success');
-            } catch (error) {
-                showToast(`Could not open Creator Studio: ${getErrorMessage(error)}`, 'error');
-            }
-        });
-    }
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const videoUrl = document.getElementById('uploadVideoUrl').value.trim();
-            let parsedUrl;
-            try {
-                parsedUrl = new URL(videoUrl);
-            } catch (error) {
-                showToast('Enter a valid direct video URL.', 'error');
-                return;
-            }
-            if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-                showToast('Video URLs must use HTTP or HTTPS.', 'error');
-                return;
-            }
-            if (!window.supabaseClient || !userProfile || userProfile.role !== 'admin') {
-                showToast('Sign in with an authorized admin account to publish videos.', 'warning');
-                return;
-            }
-
-            const durationValue = document.getElementById('uploadDuration').value;
-            const duration = durationValue ? Number(durationValue) : 0;
-            if (!Number.isFinite(duration) || duration < 0) {
-                showToast('Duration must be zero or greater.', 'error');
-                return;
-            }
-            const category = document.getElementById('uploadCategory').value;
-            const tags = [...new Set(document.getElementById('uploadTags').value
-                .split(',')
-                .map((tag) => tag.trim().toLowerCase())
-                .filter(Boolean))];
-            const video = {
-                id: window.crypto && window.crypto.randomUUID
-                    ? window.crypto.randomUUID()
-                    : `video-${Date.now()}`,
-                title: document.getElementById('uploadTitle').value.trim(),
-                channel: document.getElementById('uploadChannel').value.trim(),
-                category,
-                tags,
-                duration_sec: Math.floor(duration),
-                live: category === 'live-18',
-                views_text: '0 views',
-                age_text: 'just now',
-                days_ago: 0,
-                likes: 0,
-                dislikes: 0,
-                thumb_url: document.getElementById('uploadThumbUrl').value.trim() || null,
-                video_url: videoUrl
-            };
-            const submitButton = document.getElementById('uploadSubmitBtn');
-            submitButton.disabled = true;
-            try {
-                const { error } = await window.supabaseClient.from('videos').insert(video);
-                if (error) throw error;
-                VIDEOS.unshift({
-                    id: video.id,
-                    title: video.title,
-                    channel: video.channel,
-                    category: video.category,
-                    tags: video.tags,
-                    durationSec: video.duration_sec,
-                    live: video.live,
-                    viewsText: video.views_text,
-                    ageText: video.age_text,
-                    daysAgo: video.days_ago,
-                    likes: video.likes,
-                    dislikes: video.dislikes,
-                    thumb: video.thumb_url || seedThumb(video.id),
-                    src: video.video_url,
-                    comments: []
-                });
-                uploadForm.reset();
-                renderTagCloud();
-                renderGrid();
-                showToast('Video published successfully.', 'success');
-            } catch (error) {
-                console.error('Failed to publish video:', error);
-                showToast(`Could not publish video: ${getErrorMessage(error)}`, 'error');
-            } finally {
-                submitButton.disabled = false;
-            }
-        });
-    }
-
+    wireEvents();
+    await loadVideos();
     if (window.supabaseClient) {
-        window.supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session && session.user) {
-                const user = {
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata && session.user.user_metadata.full_name
-                        ? session.user.user_metadata.full_name
-                        : session.user.email.split('@')[0]
-                };
-                setTimeout(() => {
-                    if (!currentUser || currentUser.id !== user.id) setCurrentUser(user);
-                }, 0);
-            } else if (event === 'SIGNED_OUT') {
-                setTimeout(() => {
-                    if (currentUser) setCurrentUser(null);
-                }, 0);
-            }
-        });
+        try {
+            const { data, error } = await window.supabaseClient.auth.getSession();
+            if (error) throw error;
+            const user = data.session?.user;
+            currentUser = user ? {
+                id: user.id,
+                email: user.email,
+                name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+            } : null;
+        } catch (error) {
+            console.warn('Could not restore the Supabase session.', error);
+        }
     }
-
-    await reloadUserData();
+    await loadUserData().catch((error) => {
+        console.warn('Could not load account data; using locally saved preferences.', error);
+    });
     updateAuthUI();
     renderTagCloud();
     renderGrid();

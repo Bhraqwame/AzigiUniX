@@ -22,7 +22,7 @@ This guide will help you connect your video streaming platform to Supabase for d
 
 ### 3. Set Up Database Schema
 1. Go to SQL Editor in your Supabase dashboard
-2. Run the following SQL to create the videos table:
+2. Run `setup-sql.sql` from this project for the complete, repeatable schema. The site uses the views counter, user favorites and ratings, comments and replies, playback progress, profiles, and an atomic view-counter function. The compact schema below is retained as a reference for the video table:
 
 ```sql
 CREATE TABLE IF NOT EXISTS videos (
@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS videos (
   days_ago INTEGER DEFAULT 0,
   likes INTEGER DEFAULT 0,
   dislikes INTEGER DEFAULT 0,
+  views INTEGER NOT NULL DEFAULT 0,
   thumb_url TEXT,
   video_url TEXT NOT NULL,
   comments JSONB DEFAULT '[]',
@@ -78,6 +79,7 @@ CREATE TABLE IF NOT EXISTS comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
   comment_text TEXT NOT NULL,
   author_name TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -91,6 +93,15 @@ CREATE TABLE IF NOT EXISTS watch_history (
   video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
   watched_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, video_id)
+);
+
+-- Playback progress
+CREATE TABLE IF NOT EXISTS video_progress (
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  video_id TEXT REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  progress_sec INTEGER NOT NULL DEFAULT 0 CHECK (progress_sec >= 0),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, video_id)
 );
 
 -- Profiles table for user roles
@@ -116,6 +127,7 @@ ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE watch_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE video_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policies: users can only see/manage their own data; comments are readable by all, writable by authenticated
@@ -126,6 +138,9 @@ CREATE POLICY "Authenticated users can comment" ON comments FOR INSERT TO authen
 CREATE POLICY "Users can update/delete own comments" ON comments FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own comments" ON comments FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "Users manage own history" ON watch_history FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users manage own video progress" ON video_progress
+  FOR ALL TO authenticated USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id)
@@ -145,6 +160,58 @@ AS $$
 $$;
 CREATE POLICY "Allow insert for authenticated users" ON videos
   FOR INSERT TO authenticated WITH CHECK (public.is_admin_profile());
+
+-- Increment views without granting clients direct update access to videos.
+CREATE OR REPLACE FUNCTION public.increment_video_views(video_id_input TEXT)
+RETURNS INTEGER
+LANGUAGE SQL
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE public.videos SET views = views + 1
+  WHERE id = video_id_input
+  RETURNING views;
+$$;
+REVOKE ALL ON FUNCTION public.increment_video_views(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.increment_video_views(TEXT) TO anon, authenticated;
+
+-- Save a user's vote and keep the public video counters in sync.
+CREATE OR REPLACE FUNCTION public.rate_video(video_id_input TEXT, rating_input TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  up_count BIGINT;
+  down_count BIGINT;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication is required to rate videos';
+  END IF;
+  IF rating_input IS NULL OR rating_input NOT IN ('up', 'down') THEN
+    RAISE EXCEPTION 'Rating must be up or down';
+  END IF;
+  PERFORM 1 FROM public.videos WHERE id = video_id_input FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Video not found';
+  END IF;
+  INSERT INTO public.ratings (user_id, video_id, rating)
+  VALUES (auth.uid(), video_id_input, rating_input)
+  ON CONFLICT (user_id, video_id) DO UPDATE
+    SET rating = EXCLUDED.rating, updated_at = NOW();
+  SELECT COUNT(*) FILTER (WHERE rating = 'up'),
+         COUNT(*) FILTER (WHERE rating = 'down')
+  INTO up_count, down_count
+  FROM public.ratings WHERE video_id = video_id_input;
+  UPDATE public.videos
+  SET likes = up_count, dislikes = down_count
+  WHERE id = video_id_input;
+  RETURN jsonb_build_object('likes', up_count, 'dislikes', down_count);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.rate_video(TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.rate_video(TEXT, TEXT) TO authenticated;
 CREATE POLICY "Admins can read all profiles" ON profiles
   FOR SELECT TO authenticated USING (public.is_admin_profile());
 
@@ -189,14 +256,16 @@ You can add sample videos via the Table Editor or run this SQL:
 ```sql
 INSERT INTO videos (id, title, channel, category, tags, duration_sec, views_text, age_text, days_ago, likes, dislikes, video_url, thumb_url)
 VALUES 
-  ('v1', 'Global University Campus Tour & Student Life Overview', 'EduNetwork', 'universities', ARRAY['newest', 'campus'], 765, '50K views', '2 days ago', 2, 1204, 31, 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', 'https://picsum.photos/seed/azigi1/320/180')
+  ('v1', 'Global University Campus Tour & Student Life Overview', 'EduNetwork', 'universities', ARRAY['newest', 'campus'], 765, '50K views', '2 days ago', 2, 1204, 31, 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 'https://picsum.photos/seed/azigi1/320/180')
 ```
+
+If you already ran the previous seed setup, rerun the updated `setup-sql.sql` to give the original sample videos distinct URLs. It only updates seeded rows that still use the old shared sample URL.
 
 ## Notes
 
 - The app now fetches videos from Supabase and falls back to local data if there's an error
 - RLS is enabled with public read access - adjust based on your needs
-- The upload dashboard is now available in the footer and header (for logged-in users)
+- Creator Studio opens after clicking the AZIGI UNI X logo five times quickly; access is checked against the signed-in account's admin profile
 - To upload, provide a video URL that you've already stored (e.g., in Supabase Storage, R2, or GCP)
 - Sign-in and registration use Supabase Auth; the current user is cached in local storage for the interface.
 
@@ -257,12 +326,12 @@ CREATE POLICY "Admins can read all profiles" ON public.profiles
 ## Video Upload Flow
 
 1. Log in as admin (Gabby)
-2. Click "Admin" in the footer or the upload button in the header
+2. Click the AZIGI UNI X logo five times within 1.5 seconds to open Creator Studio
 3. Fill in the form:
    - Title (required)
    - Channel (required)
    - Category (required)
-   - Duration in seconds (optional)
+   - Duration in minutes and seconds (optional; ignored for live feeds)
    - Tags (comma-separated)
    - Thumbnail URL (optional)
    - Video URL (required) - the direct URL to the video file

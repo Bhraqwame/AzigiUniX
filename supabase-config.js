@@ -4,10 +4,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Safely initialize Supabase client
 function initSupabase() {
+    const hasProjectUrl = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL);
+    const hasPublicKey = /^eyJ[\w-]+\./.test(SUPABASE_ANON_KEY)
+        || /^sb_publishable_[A-Za-z0-9_-]+$/.test(SUPABASE_ANON_KEY);
+    if (!hasProjectUrl || !hasPublicKey) {
+        console.warn('Supabase is not configured. The site will use its local sample feed.');
+        return;
+    }
     if (typeof window.supabase !== 'undefined' && !window.supabaseClient) {
         window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        window.SUPABASE_URL = SUPABASE_URL;
-        window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
         console.log('✅ Supabase initialized successfully!');
     } else if (!window.supabaseClient) {
         console.warn('⚠️ Supabase CDN script not loaded yet or blocked by browser file:// restrictions.');
@@ -44,7 +49,7 @@ if (window.supabaseClient) {
             const user = {
                 id: session.user.id,
                 email: session.user.email,
-                name: session.user.user_metadata?.full_name || session.user.email.split('@')[0]
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User'
             };
             localStorage.setItem('azigiCurrentUser', JSON.stringify(user));
             window.dispatchEvent(new CustomEvent('supabase:authenticated', { detail: user }));
