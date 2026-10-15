@@ -1,0 +1,24 @@
+{
+  "name": "azigiunix",
+  "version": "1.0.0",
+  "description": "AZIGI UNI X - Premium Media Matrix",
+  "main": "data.js",
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "echo \"No tests specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bhraqwame/AzigiUniX.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bhraqwame/AzigiUniX/issues"
+  },
+  "homepage": "https://github.com/Bhraqwame/AzigiUniX#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
